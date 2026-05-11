@@ -264,7 +264,19 @@ router.get("/players/:playerId/stats", async (req, res): Promise<void> => {
   const [stats] = await db.select().from(playerStatsTable).where(eq(playerStatsTable.userId, playerId)).limit(1);
 
   if (!stats) {
-    res.status(404).json({ error: "Player stats not found" });
+    res.json({
+      playerId,
+      totalMatches: 0,
+      totalRuns: 0,
+      totalWickets: 0,
+      strikeRate: null,
+      economy: null,
+      highestScore: null,
+      winPercentage: null,
+      mvpCount: 0,
+      verifiedMatchCount: 0,
+      recentMatches: [],
+    });
     return;
   }
 
