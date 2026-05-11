@@ -37,7 +37,7 @@ export default function PlayerTurfs() {
     { query: { enabled: !!expandedTurf } as any }
   );
   const { data: bookings, isLoading: loadingBookings, refetch: refetchBookings } = useListBookings();
-  const { openCheckout, isPending: paymentPending } = useRazorpayCheckout();
+  const { openCheckout, isPending: paymentPending, RazorpayWebViewModal } = useRazorpayCheckout();
   const [successBooking, setSuccessBooking] = useState<any>(null);
   const cancelBooking = useCancelBooking();
 
@@ -350,6 +350,9 @@ export default function PlayerTurfs() {
           )}
         </ScrollView>
       )}
+
+      {/* Native Razorpay WebView Modal */}
+      <RazorpayWebViewModal />
 
       {/* Payment Success Modal */}
       <Modal visible={!!successBooking} animationType="fade" transparent onRequestClose={() => setSuccessBooking(null)}>

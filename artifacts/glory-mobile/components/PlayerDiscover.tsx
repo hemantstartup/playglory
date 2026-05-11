@@ -36,7 +36,7 @@ export default function PlayerDiscover() {
   // Turf booking state
   const [expandedTurf, setExpandedTurf] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]!);
-  const { openCheckout, isPending: paymentPending } = useRazorpayCheckout();
+  const { openCheckout, isPending: paymentPending, RazorpayWebViewModal } = useRazorpayCheckout();
   const [successBooking, setSuccessBooking] = useState<any>(null);
   const { data: slots, isLoading: loadingSlots } = useFetchTurfSlotAvailability(
     expandedTurf ?? 0,
@@ -358,6 +358,9 @@ export default function PlayerDiscover() {
           Alert.alert('Invite Sent! 🎉', `${player?.name ?? 'Player'} has been invited to your team!`);
         }}
       />
+
+      {/* Native Razorpay WebView Modal */}
+      <RazorpayWebViewModal />
 
       {/* Payment Success Modal */}
       <Modal visible={!!successBooking} animationType="fade" transparent onRequestClose={() => setSuccessBooking(null)}>
