@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/glory-web/"
+title = "Glory Sports - Public Website"
+version = "1.0.0"
+id = "artifacts/glory-web"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/glory-web/" ]
+localPort = 24985
+
+[services.development]
+run = "pnpm --filter @workspace/glory-web run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/glory-web", "run", "build" ]
+publicDir = "artifacts/glory-web/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24985"
+BASE_PATH = "/glory-web/"
