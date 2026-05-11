@@ -18,10 +18,15 @@ import { useAuth } from '@/context/AuthContext';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as Google from 'expo-auth-session/providers/google';
+import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 
 WebBrowser.maybeCompleteAuthSession();
+
+const GOOGLE_DISCOVERY = {
+  authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+  tokenEndpoint: 'https://oauth2.googleapis.com/token',
+};
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -155,9 +160,15 @@ export const AuthModal = ({ visible, onClose }: { visible: boolean; onClose: () 
   const verifyOtpMutation = useVerifyOtp();
   const googleAuthMutation = useGoogleAuth();
 
-  const [googleRequest, googleResponse, googlePromptAsync] = Google.useAuthRequest({
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-  });
+  const [googleRequest, googleResponse, googlePromptAsync] = AuthSession.useAuthRequest(
+    {
+      clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? '',
+      redirectUri: AuthSession.makeRedirectUri({ scheme: 'com.glorysports.app' }),
+      responseType: AuthSession.ResponseType.Token,
+      scopes: ['openid', 'profile', 'email'],
+    },
+    GOOGLE_DISCOVERY,
+  );
 
   const [googleLoading, setGoogleLoading] = useState(false);
 
@@ -172,7 +183,9 @@ export const AuthModal = ({ visible, onClose }: { visible: boolean; onClose: () 
   // Handle Google OAuth response
   useEffect(() => {
     if (googleResponse?.type === 'success') {
-      const accessToken = googleResponse.authentication?.accessToken;
+      const accessToken =
+        (googleResponse as any).authentication?.accessToken ??
+        (googleResponse as any).params?.access_token;
       if (accessToken) {
         setGoogleLoading(true);
         setErrorMsg('');
