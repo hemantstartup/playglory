@@ -30,7 +30,7 @@ export default function ProfileScreen() {
   const drawerAnim = useRef(new Animated.Value(DRAWER_WIDTH)).current;
 
   const { data: me, isLoading, refetch } = useGetMe();
-  const { data: stats } = useGetPlayerStats(me?.id as number, { query: { enabled: !!me?.id } });
+  const { data: stats } = useGetPlayerStats(me?.id as number, { query: { enabled: !!me?.id } as any });
   const { data: matches } = useListMatches({ limit: 10 } as any);
   const { data: bookings } = useListBookings();
 
@@ -55,7 +55,7 @@ export default function ProfileScreen() {
   const handleUpdate = async () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     try {
-      await updateProfile.mutateAsync({ data: { name, city } });
+      await updateProfile.mutateAsync({ data: { city } });
       setEditOpen(false);
       refetch();
     } catch (e: any) {
@@ -71,9 +71,10 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const trustScore = me?.trustScore ?? 0;
+  const meAny = me as any;
+  const trustScore = meAny?.trustScore ?? 0;
   const trustColor = trustScore >= 80 ? '#10B981' : trustScore >= 50 ? '#F97316' : '#EF4444';
-  const isAvailable = me?.availabilityStatus === 'AVAILABLE';
+  const isAvailable = meAny?.availabilityStatus != null && meAny?.availabilityStatus !== 'unavailable';
 
   if (isLoading) {
     return (
@@ -119,9 +120,9 @@ export default function ProfileScreen() {
               <View style={[styles.chip, { backgroundColor: '#F9731625', borderColor: '#F97316' }]}>
                 <Text style={[styles.chipText, { color: '#F97316' }]}>{me?.role?.toUpperCase()}</Text>
               </View>
-              {me?.playerRole ? (
+              {meAny?.playerRole ? (
                 <View style={[styles.chip, { backgroundColor: '#3B82F625', borderColor: '#3B82F6' }]}>
-                  <Text style={[styles.chipText, { color: '#3B82F6' }]}>{me.playerRole}</Text>
+                  <Text style={[styles.chipText, { color: '#3B82F6' }]}>{meAny.playerRole}</Text>
                 </View>
               ) : null}
             </View>

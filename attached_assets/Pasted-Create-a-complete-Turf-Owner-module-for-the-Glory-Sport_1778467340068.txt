@@ -1,0 +1,221 @@
+Create a complete Turf Owner module for the “Glory Sports” sports ecosystem application.
+
+IMPORTANT:
+This module is for MVP stage.
+Focus on:
+- simplicity
+- fast workflow
+- clean UI
+- real usability for Indian turf owners
+
+The system should help turf owners:
+- manage slots easily
+- increase bookings
+- track earnings
+- manage matches linked to turf bookings
+
+The interface should feel modern, premium, and mobile-friendly.
+
+====================================================
+TURF OWNER MODULE
+====================================================
+
+Create a dedicated Turf Owner dashboard inside the mobile app with role-based access.
+
+====================================================
+TURF REGISTRATION
+====================================================
+
+Allow turf owners to register their turf with:
+
+- Turf name
+- Turf photos upload
+- Turf description
+- Sports type:
+  - Cricket
+  - Football
+  - Badminton
+- Address
+- Google Maps location
+- Contact number
+- Pricing per hour
+- Available timings
+- Turf amenities:
+  - Parking
+  - Washroom
+  - Flood lights
+  - Drinking water
+
+====================================================
+REAL-TIME SLOT MANAGEMENT
+====================================================
+
+This is one of the most important features.
+
+Allow turf owners to:
+- Create slots
+- Open/close slots
+- Block unavailable timings
+- Mark maintenance timings
+- Edit pricing for specific slots
+
+Display:
+- Available slots
+- Booked slots
+- Blocked slots
+
+Use a clean calendar-based slot management UI.
+
+====================================================
+ONLINE BOOKING SYSTEM
+====================================================
+
+Users should be able to:
+- View available slots
+- Book slots
+- Select timing and duration
+
+Turf owners should be able to:
+- View booking requests
+- Approve/reject bookings (optional setting)
+- Track booking history
+
+====================================================
+BOOKING CALENDAR VIEW
+====================================================
+
+Create a modern booking calendar dashboard showing:
+- Today bookings
+- Upcoming bookings
+- Weekly booking overview
+- Available vs booked slots
+
+====================================================
+EARNINGS DASHBOARD
+====================================================
+
+Create an earnings dashboard showing:
+- Today earnings
+- Weekly earnings
+- Monthly earnings
+- Total bookings
+- Most booked timings
+
+Use modern analytics cards and charts.
+
+====================================================
+WHATSAPP & NOTIFICATION SYSTEM
+====================================================
+
+Send automatic notifications for:
+- Booking confirmation
+- Slot reminders
+- Booking cancellations
+- Match reminders
+
+Support:
+- Push notifications
+- WhatsApp notifications
+- SMS-ready structure
+
+====================================================
+MATCH LINKING SYSTEM
+====================================================
+
+Allow turf owners to:
+- Link matches with booked slots
+- Verify matches played on their turf
+
+This will help:
+- Match authenticity
+- Anti-fake scoring system
+- Player statistics validation
+
+====================================================
+TURF PROFILE PAGE
+====================================================
+
+Create a public turf profile page displaying:
+- Turf photos
+- Ratings & reviews
+- Pricing
+- Available timings
+- Sports available
+- Amenities
+- Location map
+
+====================================================
+RATINGS & REVIEWS
+====================================================
+
+Allow users to:
+- Rate turf
+- Write reviews
+- Review turf quality
+- Review lighting and facilities
+
+Show:
+- Average rating
+- Total reviews
+
+====================================================
+OPTIONAL ADVANCED MVP FEATURES
+====================================================
+
+Add support structure for:
+- Recurring bookings
+- Tournament hosting
+- Turf staff management
+
+But keep implementation simple for MVP.
+
+====================================================
+UI / UX REQUIREMENTS
+====================================================
+
+Design should feel:
+- Sports-focused
+- Premium dark theme
+- Clean and minimal
+- Fast and mobile-friendly
+
+Use:
+- Card-based layouts
+- Smooth animations
+- Modern gradients
+- Bottom navigation
+- Calendar UI
+
+Avoid clutter and overcomplicated screens.
+
+====================================================
+BACKEND REQUIREMENTS
+====================================================
+
+Create scalable backend and database schema for:
+- Turf owners
+- Turf profiles
+- Turf slots
+- Turf bookings
+- Match linkage
+- Earnings
+- Notifications
+- Reviews & ratings
+
+====================================================
+FINAL OUTPUT REQUIRED
+====================================================
+
+Generate:
+1. Complete Turf Owner mobile UI
+2. Backend APIs
+3. Database schema
+4. Slot booking logic
+5. Calendar booking system
+6. Earnings dashboard
+7. Notifications system
+8. Turf public profile
+9. Ratings & reviews system
+10. Clean production-ready folder structure
+
+The final module should feel like a real startup-ready Turf Management System for India’s local sports ecosystem.
