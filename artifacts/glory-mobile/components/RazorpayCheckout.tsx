@@ -92,6 +92,27 @@ function buildRazorpayHtml(opts: {
         modal: {
           ondismiss: function() { postMsg({ type: 'cancel' }); }
         },
+        config: {
+          display: {
+            blocks: {
+              upi: {
+                name: 'Pay via UPI',
+                instruments: [{ method: 'upi' }]
+              },
+              other: {
+                name: 'Other Payment Methods',
+                instruments: [
+                  { method: 'card' },
+                  { method: 'netbanking' },
+                  { method: 'wallet' },
+                  { method: 'paylater' }
+                ]
+              }
+            },
+            sequence: ['block.upi', 'block.other'],
+            preferences: { show_default_blocks: false }
+          }
+        },
         handler: function(response) {
           postMsg({
             type: 'success',
@@ -205,6 +226,27 @@ export function useRazorpayCheckout() {
         prefill: { name: user?.name ?? '', contact: user?.phone ?? '' },
         theme: { color: '#F97316' },
         modal: { ondismiss: () => onError('Payment cancelled') },
+        config: {
+          display: {
+            blocks: {
+              upi: {
+                name: 'Pay via UPI',
+                instruments: [{ method: 'upi' }],
+              },
+              other: {
+                name: 'Other Payment Methods',
+                instruments: [
+                  { method: 'card' },
+                  { method: 'netbanking' },
+                  { method: 'wallet' },
+                  { method: 'paylater' },
+                ],
+              },
+            },
+            sequence: ['block.upi', 'block.other'],
+            preferences: { show_default_blocks: false },
+          },
+        },
         handler: async (response: {
           razorpay_payment_id: string;
           razorpay_order_id: string;
