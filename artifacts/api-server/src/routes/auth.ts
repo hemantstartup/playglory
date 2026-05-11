@@ -14,7 +14,13 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     return;
   }
 
-  const { name, phone, email, password, role, city } = parsed.data;
+  const { name, phone, email, password, city } = parsed.data;
+  const role = (req.body.role as string) ?? "player";
+  const allowedRoles = ["player", "turf_owner", "admin"];
+  if (!allowedRoles.includes(role)) {
+    res.status(400).json({ error: "Invalid role" });
+    return;
+  }
 
   const [existing] = await db.select().from(usersTable).where(eq(usersTable.phone, phone)).limit(1);
   if (existing) {
@@ -29,7 +35,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     phone,
     email: email ?? null,
     passwordHash,
-    role: role ?? "player",
+    role,
     city: city ?? null,
   }).returning();
 
