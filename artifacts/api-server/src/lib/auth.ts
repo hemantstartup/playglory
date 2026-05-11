@@ -5,13 +5,13 @@ import { type Request, type Response, type NextFunction } from "express";
 
 const JWT_SECRET = process.env.SESSION_SECRET ?? "glory-sports-secret";
 
-export function signToken(userId: number): string {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "30d" });
+export function signToken(userId: number, role: string): string {
+  return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: "30d" });
 }
 
-export function verifyToken(token: string): { userId: number } | null {
+export function verifyToken(token: string): { userId: number; role: string } | null {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: number };
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: number; role: string };
     return decoded;
   } catch {
     return null;

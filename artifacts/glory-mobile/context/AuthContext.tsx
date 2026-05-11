@@ -2,11 +2,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { setAuthTokenGetter } from '@workspace/api-client-react';
 
-function decodeJwtRole(token: string): string | null {
+function decodeJwtPayload(token: string): Record<string, any> | null {
   try {
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    const decoded = JSON.parse(atob(base64));
-    return decoded.role ?? null;
+    const base64 = token.split('.')[1]!.replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(base64));
+  } catch { return null; }
+}
+
+async function fetchRoleFromApi(token: string): Promise<string | null> {
+  try {
+    const res = await fetch('/api/auth/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.role ?? null;
   } catch { return null; }
 }
 
@@ -24,12 +34,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const resolveRole = async (t: string): Promise<string | null> => {
+    const payload = decodeJwtPayload(t);
+    if (payload?.role) return payload.role;
+    return fetchRoleFromApi(t);
+  };
+
   useEffect(() => {
     const loadToken = async () => {
       try {
         const storedToken = await AsyncStorage.getItem('glory_token');
         setTokenState(storedToken);
-        setUserRole(storedToken ? decodeJwtRole(storedToken) : null);
+        if (storedToken) {
+          const role = await resolveRole(storedToken);
+          setUserRole(role);
+        }
       } catch (e) {
         console.error('Failed to load token', e);
       } finally {
@@ -44,7 +63,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       if (newToken) {
         await AsyncStorage.setItem('glory_token', newToken);
-        setUserRole(decodeJwtRole(newToken));
+        const role = await resolveRole(newToken);
+        setUserRole(role);
       } else {
         await AsyncStorage.removeItem('glory_token');
         setUserRole(null);
