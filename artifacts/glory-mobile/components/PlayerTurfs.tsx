@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable,
-  TextInput, ActivityIndicator, Alert, Platform,
+  TextInput, ActivityIndicator, Alert, Platform, Modal,
 } from 'react-native';
-import { useListTurfs, useFetchTurfSlotAvailability, useCreateBooking, useListBookings, useCancelBooking } from '@workspace/api-client-react';
+import { useListTurfs, useFetchTurfSlotAvailability, useListBookings, useCancelBooking } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
+import { useRazorpayCheckout } from './RazorpayCheckout';
 
 const CITIES = ['All', 'Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Chennai', 'Pune'];
 type MainTab = 'Browse' | 'My Bookings';
@@ -36,29 +37,36 @@ export default function PlayerTurfs() {
     { query: { enabled: !!expandedTurf } as any }
   );
   const { data: bookings, isLoading: loadingBookings, refetch: refetchBookings } = useListBookings();
-  const createBooking = useCreateBooking();
+  const { openCheckout, isPending: paymentPending } = useRazorpayCheckout();
+  const [successBooking, setSuccessBooking] = useState<any>(null);
   const cancelBooking = useCancelBooking();
 
   const filtered = ((turfs as any[]) ?? []).filter((t: any) =>
     !search || t.name?.toLowerCase().includes(search.toLowerCase()) || t.city?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleBook = async (turf: any, slot: any) => {
+  const handleBook = (turf: any, slot: any) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    try {
-      await createBooking.mutateAsync({
-        data: {
-          turfId: turf.id,
-          date: selectedDate,
-          startTime: slot.startTime,
-          endTime: slot.endTime,
+    openCheckout(
+      {
+        turfId: turf.id,
+        turfName: turf.name,
+        date: selectedDate,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        pricePerHour: slot.price ?? turf.pricePerHour,
+      },
+      (result) => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setSuccessBooking({ ...result.booking, turfName: turf.name });
+        refetchBookings();
+      },
+      (msg) => {
+        if (msg !== 'Payment cancelled') {
+          Alert.alert('Payment Failed', msg);
         }
-      });
-      Alert.alert('Booked! 🎉', `Slot ${slot.startTime}–${slot.endTime} at ${turf.name} confirmed for ₹${slot.price}!`);
-      refetchBookings();
-    } catch (e: any) {
-      Alert.alert('Booking Failed', e?.message ?? 'Slot may already be taken.');
-    }
+      },
+    );
   };
 
   const handleCancel = (bookingId: number) => {
@@ -223,17 +231,10 @@ export default function PlayerTurfs() {
                           ((slots as any[]) ?? []).map((slot: any, i: number) => (
                             <Pressable
                               key={i}
-                              disabled={!slot.isAvailable}
+                              disabled={!slot.isAvailable || paymentPending}
                               onPress={() => {
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                Alert.alert(
-                                  'Confirm Booking',
-                                  `Book ${slot.startTime}–${slot.endTime} at ${turf.name} for ₹${slot.price}?`,
-                                  [
-                                    { text: 'Cancel', style: 'cancel' },
-                                    { text: 'Book Now', onPress: () => handleBook(turf, slot) },
-                                  ]
-                                );
+                                handleBook(turf, slot);
                               }}
                               style={[styles.slotChip, {
                                 backgroundColor: slot.isAvailable ? colors.primary + '15' : colors.muted,
@@ -241,12 +242,18 @@ export default function PlayerTurfs() {
                                 opacity: slot.isAvailable ? 1 : 0.4,
                               }]}
                             >
-                              <Text style={[styles.slotTime, { color: slot.isAvailable ? colors.primary : colors.mutedForeground }]}>
-                                {slot.startTime}
-                              </Text>
-                              <Text style={[styles.slotPriceLbl, { color: colors.mutedForeground }]}>
-                                {slot.isAvailable ? `₹${slot.price}` : 'Booked'}
-                              </Text>
+                              {paymentPending ? (
+                                <ActivityIndicator size="small" color={colors.primary} />
+                              ) : (
+                                <>
+                                  <Text style={[styles.slotTime, { color: slot.isAvailable ? colors.primary : colors.mutedForeground }]}>
+                                    {slot.startTime}
+                                  </Text>
+                                  <Text style={[styles.slotPriceLbl, { color: slot.isAvailable ? colors.primary : colors.mutedForeground, fontWeight: '700' }]}>
+                                    {slot.isAvailable ? `Pay ₹${slot.price}` : 'Booked'}
+                                  </Text>
+                                </>
+                              )}
                             </Pressable>
                           ))
                         )}
@@ -343,6 +350,40 @@ export default function PlayerTurfs() {
           )}
         </ScrollView>
       )}
+
+      {/* Payment Success Modal */}
+      <Modal visible={!!successBooking} animationType="fade" transparent onRequestClose={() => setSuccessBooking(null)}>
+        <View style={styles.successOverlay}>
+          <View style={[styles.successCard, { backgroundColor: colors.card }]}>
+            <LinearGradient colors={['#10B981', '#059669']} style={styles.successIconWrap}>
+              <Ionicons name="checkmark" size={40} color="#fff" />
+            </LinearGradient>
+            <Text style={[styles.successTitle, { color: colors.text }]}>Booking Confirmed! 🎉</Text>
+            <Text style={[styles.successSub, { color: colors.mutedForeground }]}>{successBooking?.turfName}</Text>
+            <View style={[styles.successDetails, { backgroundColor: colors.background }]}>
+              {[
+                { label: 'Date', val: successBooking?.date },
+                { label: 'Time', val: `${successBooking?.startTime} – ${successBooking?.endTime}` },
+                { label: 'Amount Paid', val: `₹${successBooking?.totalAmount}` },
+                { label: 'Payment ID', val: successBooking?.razorpayPaymentId ? successBooking.razorpayPaymentId.slice(0, 22) + '…' : '—' },
+              ].map((row, i) => (
+                <View key={i} style={[styles.successRow, i > 0 && { borderTopWidth: 1, borderTopColor: colors.border }]}>
+                  <Text style={[styles.successRowLabel, { color: colors.mutedForeground }]}>{row.label}</Text>
+                  <Text style={[styles.successRowVal, { color: colors.text }]}>{row.val}</Text>
+                </View>
+              ))}
+            </View>
+            <Pressable onPress={() => { setSuccessBooking(null); setActiveTab('My Bookings'); }} style={{ width: '100%', marginTop: 8 }}>
+              <LinearGradient colors={['#F97316', '#EA580C']} style={styles.successDoneBtn} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                <Text style={styles.successDoneBtnText}>View My Bookings</Text>
+              </LinearGradient>
+            </Pressable>
+            <Pressable onPress={() => setSuccessBooking(null)}>
+              <Text style={[styles.successSkip, { color: colors.mutedForeground }]}>Dismiss</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -409,4 +450,16 @@ const styles = StyleSheet.create({
   bookingId: { fontSize: 11 },
   cancelBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, borderWidth: 1.5 },
   cancelText: { color: '#EF4444', fontSize: 12, fontWeight: '700' },
+  successOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.75)', alignItems: 'center', justifyContent: 'center', padding: 24 },
+  successCard: { width: '100%', maxWidth: 400, borderRadius: 24, padding: 28, alignItems: 'center', gap: 12 },
+  successIconWrap: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  successTitle: { fontSize: 22, fontWeight: '900', textAlign: 'center' },
+  successSub: { fontSize: 14, textAlign: 'center', marginBottom: 4 },
+  successDetails: { width: '100%', borderRadius: 14, overflow: 'hidden' },
+  successRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12 },
+  successRowLabel: { fontSize: 13 },
+  successRowVal: { fontSize: 13, fontWeight: '700' },
+  successDoneBtn: { paddingVertical: 16, borderRadius: 14, alignItems: 'center', width: '100%' },
+  successDoneBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+  successSkip: { fontSize: 13, marginTop: 4, textDecorationLine: 'underline' },
 });
