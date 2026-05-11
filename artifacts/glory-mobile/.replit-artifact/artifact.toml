@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/"
+title = "Glory Sports"
+version = "1.0.0"
+id = "artifacts/glory-mobile"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/" ]
+localPort = 24049
+
+[services.development]
+run = "pnpm --filter @workspace/glory-mobile run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/glory-mobile", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/glory-mobile", "run", "serve" ]
+
+[services.env]
+PORT = "24049"
+BASE_PATH = "/"

@@ -1,0 +1,363 @@
+Build a modern full-stack mobile-first sports ecosystem application called “Glory Sports” focused on local cricket turf booking, player statistics, team creation, and match management for India.
+
+IMPORTANT:
+This is an MVP startup product.
+Do NOT overload the application with unnecessary future features.
+Focus on:
+- smooth user experience
+- scalable backend
+- clean UI
+- fast performance
+- real usability
+
+The app should feel like a real startup-ready product, not a demo.
+
+====================================================
+MAIN GOAL
+====================================================
+
+Create a sports platform where users can:
+1. Book sports turf slots
+2. Create teams
+3. Discover and join unknown players
+4. Create and manage matches
+5. Track player report cards and ratings
+6. Build sports identity through performance statistics
+
+====================================================
+TECH STACK
+====================================================
+
+Frontend:
+- React Native with Expo
+- Mobile-first UI
+- Dark sporty premium design
+- Smooth animations
+- Bottom tab navigation
+
+Backend:
+- Supabase or Firebase backend
+- PostgreSQL database preferred
+- REST API structure
+- Secure authentication
+
+Admin Panel:
+- Separate responsive web dashboard
+- React web admin panel
+
+====================================================
+USER ROLES
+====================================================
+
+Single mobile app for:
+1. Players
+2. Turf Owners
+
+Role-based interface after login.
+
+Separate web login only for Admin.
+
+====================================================
+AUTHENTICATION
+====================================================
+
+- Mobile OTP login
+- Google login optional
+- User can choose role:
+  - Player
+  - Turf Owner
+- User can switch roles later
+
+====================================================
+PLAYER FEATURES (HIGH PRIORITY)
+====================================================
+
+1. Player Profile
+- Profile photo
+- Name
+- City
+- Player role:
+  - Batsman
+  - Bowler
+  - All-rounder
+  - Wicket Keeper
+- Batting style
+- Bowling style
+- Teams joined
+
+2. Player Report Card
+Track:
+- Total matches
+- Total runs
+- Total wickets
+- Strike rate
+- Economy
+- Highest score
+- Win percentage
+- MVP count
+
+3. Player Ratings
+- Overall player rating
+- Batting rating
+- Bowling rating
+- Match consistency
+
+4. Match History
+- Recent matches
+- Match scorecards
+- Personal performance
+
+5. Team System
+- Create team
+- Join team
+- Invite players
+- Team members list
+
+6. Unknown Player Discovery
+Users can:
+- Search players by city
+- Search by rating
+- Search by player role
+
+7. Need Players Feature (IMPORTANT)
+Users can post:
+- “Need 2 players tonight”
+- “Need bowler for match”
+
+Nearby available players can join.
+
+8. Player Availability Status
+- Available today
+- Available this weekend
+- Looking for team
+
+====================================================
+TURF OWNER FEATURES
+====================================================
+
+1. Turf Registration
+- Turf name
+- Turf photos
+- Address/location
+- Pricing per hour
+- Sports available
+- Turf timings
+
+2. Slot Booking System
+- Real-time slot availability
+- Book slot
+- Cancel slot
+- Block unavailable timings
+
+3. Booking Management
+- Upcoming bookings
+- Booking history
+- Earnings overview
+
+4. Turf Dashboard
+- Today bookings
+- Most booked timings
+- Monthly earnings
+
+====================================================
+MATCH MANAGEMENT SYSTEM
+====================================================
+
+This is a core feature.
+
+1. Create Match
+- Select turf
+- Select teams
+- Number of overs
+- Match type
+
+2. Match Scoring
+Simple scoring system:
+- Runs
+- Wickets
+- Extras
+- Overs
+
+3. Match Result
+Generate:
+- Match summary
+- Winning team
+- MVP player
+
+4. Auto Player Stats Update
+After match completion:
+- Automatically update player statistics
+
+====================================================
+ANTI-FAKE SCORE & TRUST SYSTEM
+====================================================
+
+This is a VERY IMPORTANT system.
+
+1. Dual Team Match Verification
+After match completion:
+- Team A captain must confirm score
+- Team B captain must confirm score
+
+Only after both confirmations:
+- Match becomes verified
+- Player statistics update
+
+2. Player Match Confirmation
+Players can confirm:
+- “Yes, I played this match”
+
+3. Turf-Based Match Validation
+Only matches linked to booked/registered turfs can become verified matches.
+
+4. Reputation & Trust Score
+Each player should have:
+- Fair play score
+- Verified match percentage
+- Report count
+
+5. Suspicious Match Detection
+Flag suspicious matches such as:
+- Unrealistic scores
+- Too many matches in one day
+- Repeated fake activity
+
+Send suspicious matches to Admin review.
+
+6. Verified Badges
+System should support:
+- Verified Player
+- Verified Turf
+- Verified Captain
+
+====================================================
+SOCIAL & SHARING FEATURES
+====================================================
+
+1. Share Match Result
+Generate shareable scorecard image for:
+- WhatsApp
+- Instagram
+- Social sharing
+
+2. Notifications
+Send notifications for:
+- Match invites
+- Booking confirmation
+- Match reminders
+- Team join requests
+
+====================================================
+ADMIN PANEL FEATURES
+====================================================
+
+1. User Management
+- Players
+- Turf owners
+
+2. Turf Verification
+Approve or reject turf listings.
+
+3. Match Monitoring
+Check suspicious/fake matches.
+
+4. Dashboard Analytics
+- Total users
+- Total matches
+- Total bookings
+- Revenue overview
+
+5. Reports & Disputes
+Handle:
+- Fake users
+- Fake scores
+- Booking disputes
+
+====================================================
+UI / UX REQUIREMENTS
+====================================================
+
+Design style:
+- Modern
+- Sports-focused
+- Premium dark theme
+- Cricket-inspired visuals
+- Clean card layouts
+- Minimal clutter
+
+The UI should feel similar to:
+- modern sports apps
+- fantasy sports UI
+- startup-grade mobile apps
+
+Use:
+- bottom navigation
+- smooth transitions
+- clean typography
+- modern gradients
+
+====================================================
+DATABASE STRUCTURE
+====================================================
+
+Create scalable schema for:
+- Users
+- Teams
+- Team members
+- Turfs
+- Turf bookings
+- Matches
+- Match scorecards
+- Player statistics
+- Notifications
+- Ratings
+- Trust scores
+- Verification records
+
+====================================================
+IMPORTANT MVP RULES
+====================================================
+
+DO NOT ADD:
+- Live streaming
+- AI highlights
+- Fantasy league
+- Ecommerce
+- Social reels feed
+- Sponsorship marketplace
+- Complex AI features
+
+Keep architecture scalable for future expansion.
+
+====================================================
+FUTURE READY STRUCTURE
+====================================================
+
+Prepare modular scalable structure for future features:
+- Tournament system
+- Leaderboards
+- Sponsorship marketplace
+- AI analytics
+- Sports social network
+- Live streaming
+
+But DO NOT implement them now.
+
+====================================================
+FINAL OUTPUT REQUIRED
+====================================================
+
+Generate:
+1. Complete frontend mobile app
+2. Backend APIs
+3. Database schema
+4. Admin web panel
+5. Authentication flow
+6. Slot booking system
+7. Match management system
+8. Team & player discovery system
+9. Notifications system
+10. Anti-fake score verification system
+11. Clean production-ready folder structure
+
+The final product should feel like a real startup MVP built for scaling in India’s grassroots sports ecosystem.
