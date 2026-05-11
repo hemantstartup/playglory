@@ -17,7 +17,7 @@ export const AuthModal = ({ visible, onClose }: { visible: boolean; onClose: () 
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
-  const [role, setRole] = useState<'PLAYER' | 'TURF_OWNER'>('PLAYER');
+  const [role, setRole] = useState<'player' | 'turf_owner'>('player');
 
   const loginMutation = useLogin();
   const registerMutation = useRegister();
@@ -109,16 +109,16 @@ export const AuthModal = ({ visible, onClose }: { visible: boolean; onClose: () 
               />
               <View style={styles.roleContainer}>
                 <Pressable 
-                  onPress={() => setRole('PLAYER')}
-                  style={[styles.roleBtn, role === 'PLAYER' && { backgroundColor: colors.primary }]}
+                  onPress={() => setRole('player')}
+                  style={[styles.roleBtn, role === 'player' && { backgroundColor: colors.primary }]}
                 >
-                  <Text style={[styles.roleText, { color: role === 'PLAYER' ? '#fff' : colors.mutedForeground }]}>Player</Text>
+                  <Text style={[styles.roleText, { color: role === 'player' ? '#fff' : colors.mutedForeground }]}>Player</Text>
                 </Pressable>
                 <Pressable 
-                  onPress={() => setRole('TURF_OWNER')}
-                  style={[styles.roleBtn, role === 'TURF_OWNER' && { backgroundColor: colors.primary }]}
+                  onPress={() => setRole('turf_owner')}
+                  style={[styles.roleBtn, role === 'turf_owner' && { backgroundColor: colors.primary }]}
                 >
-                  <Text style={[styles.roleText, { color: role === 'TURF_OWNER' ? '#fff' : colors.mutedForeground }]}>Turf Owner</Text>
+                  <Text style={[styles.roleText, { color: role === 'turf_owner' ? '#fff' : colors.mutedForeground }]}>Turf Owner</Text>
                 </Pressable>
               </View>
             </>
