@@ -41,3 +41,8 @@ externalPort = 3001
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID = "535974076474-69ji8dm0dnqa9prc56sum7v551805oan.apps.googleusercontent.com"

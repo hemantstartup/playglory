@@ -153,12 +153,48 @@ export const AuthModal = ({ visible, onClose }: { visible: boolean; onClose: () 
   const registerMutation = useRegister();
   const sendOtpMutation = useSendOtp();
   const verifyOtpMutation = useVerifyOtp();
+  const googleAuthMutation = useGoogleAuth();
+
+  const [googleRequest, googleResponse, googlePromptAsync] = Google.useAuthRequest({
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  });
+
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const isLoading =
     loginMutation.isPending ||
     registerMutation.isPending ||
     sendOtpMutation.isPending ||
-    verifyOtpMutation.isPending;
+    verifyOtpMutation.isPending ||
+    googleAuthMutation.isPending ||
+    googleLoading;
+
+  // Handle Google OAuth response
+  useEffect(() => {
+    if (googleResponse?.type === 'success') {
+      const accessToken = googleResponse.authentication?.accessToken;
+      if (accessToken) {
+        setGoogleLoading(true);
+        setErrorMsg('');
+        googleAuthMutation.mutateAsync({ data: { accessToken } })
+          .then((res) => {
+            if (res.token) return finish(res.token);
+          })
+          .catch((e: any) => {
+            setErrorMsg(e?.data?.error || e?.message || 'Google sign-in failed. Please try again.');
+          })
+          .finally(() => setGoogleLoading(false));
+      }
+    } else if (googleResponse?.type === 'error') {
+      setErrorMsg('Google sign-in was cancelled or failed.');
+    }
+  }, [googleResponse]);
+
+  const handleGoogleSignIn = async () => {
+    setErrorMsg('');
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await googlePromptAsync();
+  };
 
   // Countdown timer for resend
   useEffect(() => {
@@ -347,16 +383,19 @@ export const AuthModal = ({ visible, onClose }: { visible: boolean; onClose: () 
           </LinearGradient>
         </Pressable>
 
-        {/* Google — coming soon */}
+        {/* Google Sign-In */}
         <Pressable
-          style={styles.socialBtn}
-          onPress={() =>
-            Alert.alert('Coming Soon', 'Google sign-in will be available in the next update.')
-          }
+          style={[styles.socialBtn, (!googleRequest || googleLoading) && { opacity: 0.6 }]}
+          onPress={handleGoogleSignIn}
+          disabled={!googleRequest || googleLoading}
         >
-          <View style={styles.googleIconWrap}>
-            <Text style={styles.googleG}>G</Text>
-          </View>
+          {googleLoading ? (
+            <ActivityIndicator color="#fff" size="small" style={{ marginRight: 10 }} />
+          ) : (
+            <View style={styles.googleIconWrap}>
+              <Text style={styles.googleG}>G</Text>
+            </View>
+          )}
           <Text style={styles.socialBtnText}>Continue with Google</Text>
           <View style={{ width: 32 }} />
         </Pressable>
