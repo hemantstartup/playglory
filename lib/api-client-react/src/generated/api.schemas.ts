@@ -355,6 +355,15 @@ export const BookingStatus = {
   completed: "completed",
 } as const;
 
+export type BookingPaymentStatus =
+  (typeof BookingPaymentStatus)[keyof typeof BookingPaymentStatus];
+
+export const BookingPaymentStatus = {
+  pending: "pending",
+  paid: "paid",
+  failed: "failed",
+} as const;
+
 export interface Booking {
   id: number;
   turfId: number;
@@ -368,6 +377,11 @@ export interface Booking {
   status: BookingStatus;
   /** @nullable */
   matchId?: number | null;
+  /** @nullable */
+  razorpayOrderId?: string | null;
+  /** @nullable */
+  razorpayPaymentId?: string | null;
+  paymentStatus?: BookingPaymentStatus;
   createdAt: string;
 }
 
@@ -381,6 +395,32 @@ export interface TurfDashboard {
 }
 
 export interface BookingInput {
+  turfId: number;
+  date: string;
+  startTime: string;
+  endTime: string;
+}
+
+export interface RazorpayOrderInput {
+  turfId: number;
+  date: string;
+  startTime: string;
+  endTime: string;
+}
+
+export interface RazorpayOrderResponse {
+  orderId: string;
+  amount: number;
+  currency: string;
+  keyId: string;
+  turfName?: string;
+  description?: string;
+}
+
+export interface RazorpayVerifyInput {
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+  razorpaySignature: string;
   turfId: number;
   date: string;
   startTime: string;

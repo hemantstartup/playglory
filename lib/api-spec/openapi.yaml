@@ -28,6 +28,8 @@ tags:
     description: Player statistics
   - name: notifications
     description: Notification management
+  - name: payments
+    description: Razorpay payment processing
   - name: admin
     description: Admin operations
 
@@ -638,6 +640,49 @@ paths:
       responses:
         "200":
           description: Cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  # PAYMENTS
+  /payments/razorpay-order:
+    post:
+      operationId: createRazorpayOrder
+      tags: [payments]
+      summary: Create a Razorpay order for turf booking
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RazorpayOrderInput"
+      responses:
+        "201":
+          description: Razorpay order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RazorpayOrderResponse"
+
+  /payments/razorpay-verify:
+    post:
+      operationId: verifyRazorpayPayment
+      tags: [payments]
+      summary: Verify Razorpay payment and confirm booking
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RazorpayVerifyInput"
+      responses:
+        "201":
+          description: Payment verified, booking created
           content:
             application/json:
               schema:
@@ -1591,6 +1636,13 @@ components:
           enum: [confirmed, cancelled, completed]
         matchId:
           type: ["integer", "null"]
+        razorpayOrderId:
+          type: ["string", "null"]
+        razorpayPaymentId:
+          type: ["string", "null"]
+        paymentStatus:
+          type: string
+          enum: [pending, paid, failed]
         createdAt:
           type: string
 
@@ -1598,6 +1650,55 @@ components:
       type: object
       required: [turfId, date, startTime, endTime]
       properties:
+        turfId:
+          type: integer
+        date:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+
+    RazorpayOrderInput:
+      type: object
+      required: [turfId, date, startTime, endTime]
+      properties:
+        turfId:
+          type: integer
+        date:
+          type: string
+        startTime:
+          type: string
+        endTime:
+          type: string
+
+    RazorpayOrderResponse:
+      type: object
+      required: [orderId, amount, currency, keyId]
+      properties:
+        orderId:
+          type: string
+        amount:
+          type: integer
+        currency:
+          type: string
+        keyId:
+          type: string
+        turfName:
+          type: string
+        description:
+          type: string
+
+    RazorpayVerifyInput:
+      type: object
+      required: [razorpayOrderId, razorpayPaymentId, razorpaySignature, turfId, date, startTime, endTime]
+      properties:
+        razorpayOrderId:
+          type: string
+        razorpayPaymentId:
+          type: string
+        razorpaySignature:
+          type: string
         turfId:
           type: integer
         date:

@@ -5,6 +5,7 @@
  * Glory Sports API - Cricket sports ecosystem for India
  * OpenAPI spec version: 0.1.0
  */
+import type { BookingPaymentStatus } from "./bookingPaymentStatus";
 import type { BookingStatus } from "./bookingStatus";
 
 export interface Booking {
@@ -20,5 +21,10 @@ export interface Booking {
   status: BookingStatus;
   /** @nullable */
   matchId?: number | null;
+  /** @nullable */
+  razorpayOrderId?: string | null;
+  /** @nullable */
+  razorpayPaymentId?: string | null;
+  paymentStatus?: BookingPaymentStatus;
   createdAt: string;
 }

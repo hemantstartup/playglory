@@ -14,6 +14,9 @@ export const bookingsTable = pgTable("bookings", {
   totalAmount: real("total_amount").notNull().default(0),
   status: text("status").notNull().default("confirmed"),
   matchId: integer("match_id"),
+  razorpayOrderId: text("razorpay_order_id"),
+  razorpayPaymentId: text("razorpay_payment_id"),
+  paymentStatus: text("payment_status").notNull().default("pending"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

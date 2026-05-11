@@ -690,6 +690,9 @@ export const GetTurfDashboardResponse = zod.object({
         totalAmount: zod.number().optional(),
         status: zod.enum(["confirmed", "cancelled", "completed"]),
         matchId: zod.number().nullish(),
+        razorpayOrderId: zod.string().nullish(),
+        razorpayPaymentId: zod.string().nullish(),
+        paymentStatus: zod.enum(["pending", "paid", "failed"]).optional(),
         createdAt: zod.string(),
       }),
     )
@@ -716,6 +719,9 @@ export const ListBookingsResponseItem = zod.object({
   totalAmount: zod.number().optional(),
   status: zod.enum(["confirmed", "cancelled", "completed"]),
   matchId: zod.number().nullish(),
+  razorpayOrderId: zod.string().nullish(),
+  razorpayPaymentId: zod.string().nullish(),
+  paymentStatus: zod.enum(["pending", "paid", "failed"]).optional(),
   createdAt: zod.string(),
 });
 export const ListBookingsResponse = zod.array(ListBookingsResponseItem);
@@ -749,6 +755,9 @@ export const GetBookingResponse = zod.object({
   totalAmount: zod.number().optional(),
   status: zod.enum(["confirmed", "cancelled", "completed"]),
   matchId: zod.number().nullish(),
+  razorpayOrderId: zod.string().nullish(),
+  razorpayPaymentId: zod.string().nullish(),
+  paymentStatus: zod.enum(["pending", "paid", "failed"]).optional(),
   createdAt: zod.string(),
 });
 
@@ -771,7 +780,33 @@ export const CancelBookingResponse = zod.object({
   totalAmount: zod.number().optional(),
   status: zod.enum(["confirmed", "cancelled", "completed"]),
   matchId: zod.number().nullish(),
+  razorpayOrderId: zod.string().nullish(),
+  razorpayPaymentId: zod.string().nullish(),
+  paymentStatus: zod.enum(["pending", "paid", "failed"]).optional(),
   createdAt: zod.string(),
+});
+
+/**
+ * @summary Create a Razorpay order for turf booking
+ */
+export const CreateRazorpayOrderBody = zod.object({
+  turfId: zod.number(),
+  date: zod.string(),
+  startTime: zod.string(),
+  endTime: zod.string(),
+});
+
+/**
+ * @summary Verify Razorpay payment and confirm booking
+ */
+export const VerifyRazorpayPaymentBody = zod.object({
+  razorpayOrderId: zod.string(),
+  razorpayPaymentId: zod.string(),
+  razorpaySignature: zod.string(),
+  turfId: zod.number(),
+  date: zod.string(),
+  startTime: zod.string(),
+  endTime: zod.string(),
 });
 
 /**
@@ -1312,6 +1347,9 @@ export const AdminListBookingsResponse = zod.object({
       totalAmount: zod.number().optional(),
       status: zod.enum(["confirmed", "cancelled", "completed"]),
       matchId: zod.number().nullish(),
+      razorpayOrderId: zod.string().nullish(),
+      razorpayPaymentId: zod.string().nullish(),
+      paymentStatus: zod.enum(["pending", "paid", "failed"]).optional(),
       createdAt: zod.string(),
     }),
   ),
@@ -1338,6 +1376,9 @@ export const AdminCancelBookingResponse = zod.object({
   totalAmount: zod.number().optional(),
   status: zod.enum(["confirmed", "cancelled", "completed"]),
   matchId: zod.number().nullish(),
+  razorpayOrderId: zod.string().nullish(),
+  razorpayPaymentId: zod.string().nullish(),
+  paymentStatus: zod.enum(["pending", "paid", "failed"]).optional(),
   createdAt: zod.string(),
 });
 

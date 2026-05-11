@@ -1,15 +1,17 @@
 import React, { useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable,
-  TextInput, ActivityIndicator, Alert, Platform,
+  TextInput, ActivityIndicator, Alert, Platform, Modal,
 } from 'react-native';
-import { useListPlayers, useListTurfs, useCreateBooking, useFetchTurfSlotAvailability } from '@workspace/api-client-react';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useListPlayers, useListTurfs, useFetchTurfSlotAvailability } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import PlayerProfileModal from './PlayerProfileModal';
 import TeamsScreen from './TeamsScreen';
+import { useRazorpayCheckout } from './RazorpayCheckout';
 
 const ROLES: { label: string; apiValue?: string }[] = [
   { label: 'All' },
@@ -34,7 +36,8 @@ export default function PlayerDiscover() {
   // Turf booking state
   const [expandedTurf, setExpandedTurf] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]!);
-  const createBooking = useCreateBooking();
+  const { openCheckout, isPending: paymentPending } = useRazorpayCheckout();
+  const [successBooking, setSuccessBooking] = useState<any>(null);
   const { data: slots, isLoading: loadingSlots } = useFetchTurfSlotAvailability(
     expandedTurf ?? 0,
     selectedDate,
@@ -58,16 +61,27 @@ export default function PlayerDiscover() {
     !search || t.name?.toLowerCase().includes(search.toLowerCase()) || t.city?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleBook = async (turf: any, slot: any) => {
+  const handleBook = (turf: any, slot: any) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    try {
-      await createBooking.mutateAsync({
-        data: { turfId: turf.id, date: selectedDate, startTime: slot.startTime, endTime: slot.endTime },
-      });
-      Alert.alert('Booked! 🎉', `Slot ${slot.startTime}–${slot.endTime} at ${turf.name} is confirmed!`);
-    } catch (e: any) {
-      Alert.alert('Booking Failed', e?.message ?? 'Slot may already be taken. Try another time.');
-    }
+    openCheckout(
+      {
+        turfId: turf.id,
+        turfName: turf.name,
+        date: selectedDate,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        pricePerHour: slot.price ?? turf.pricePerHour,
+      },
+      (result) => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setSuccessBooking({ ...result.booking, turfName: turf.name, slot });
+      },
+      (msg) => {
+        if (msg !== 'Payment cancelled') {
+          Alert.alert('Payment Failed', msg);
+        }
+      },
+    );
   };
 
   const openProfile = useCallback((id: number, name?: string) => {
@@ -296,17 +310,10 @@ export default function PlayerDiscover() {
                           {((slots as any[]) ?? []).map((slot: any, i: number) => (
                             <Pressable
                               key={i}
-                              disabled={!slot.isAvailable || createBooking.isPending}
+                              disabled={!slot.isAvailable || paymentPending}
                               onPress={() => {
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                Alert.alert(
-                                  'Confirm Booking',
-                                  `Book ${slot.startTime}–${slot.endTime} at ${t.name} for ₹${slot.price ?? t.pricePerHour}?`,
-                                  [
-                                    { text: 'Cancel', style: 'cancel' },
-                                    { text: 'Book Now', onPress: () => handleBook(t, slot) },
-                                  ]
-                                );
+                                handleBook(t, slot);
                               }}
                               style={[styles.slotChip, {
                                 backgroundColor: slot.isAvailable ? colors.primary + '15' : colors.muted,
@@ -314,12 +321,18 @@ export default function PlayerDiscover() {
                                 opacity: slot.isAvailable ? 1 : 0.5,
                               }]}
                             >
-                              <Text style={[styles.slotTime, { color: slot.isAvailable ? colors.primary : colors.mutedForeground }]}>
-                                {slot.startTime}
-                              </Text>
-                              <Text style={[styles.slotPrice, { color: colors.mutedForeground }]}>
-                                {slot.isAvailable ? `₹${slot.price ?? t.pricePerHour}` : 'Booked'}
-                              </Text>
+                              {paymentPending ? (
+                                <ActivityIndicator size="small" color={colors.primary} />
+                              ) : (
+                                <>
+                                  <Text style={[styles.slotTime, { color: slot.isAvailable ? colors.primary : colors.mutedForeground }]}>
+                                    {slot.startTime}
+                                  </Text>
+                                  <Text style={[styles.slotPrice, { color: slot.isAvailable ? colors.primary : colors.mutedForeground, fontWeight: '700' }]}>
+                                    {slot.isAvailable ? `Pay ₹${slot.price ?? t.pricePerHour}` : 'Booked'}
+                                  </Text>
+                                </>
+                              )}
                             </Pressable>
                           ))}
                           {((slots as any[]) ?? []).length === 0 && (
@@ -345,6 +358,39 @@ export default function PlayerDiscover() {
           Alert.alert('Invite Sent! 🎉', `${player?.name ?? 'Player'} has been invited to your team!`);
         }}
       />
+
+      {/* Payment Success Modal */}
+      <Modal visible={!!successBooking} animationType="fade" transparent onRequestClose={() => setSuccessBooking(null)}>
+        <View style={styles.successOverlay}>
+          <View style={[styles.successCard, { backgroundColor: colors.card }]}>
+            <LinearGradient colors={['#10B981', '#059669']} style={styles.successIconWrap}>
+              <Ionicons name="checkmark" size={40} color="#fff" />
+            </LinearGradient>
+            <Text style={[styles.successTitle, { color: colors.text }]}>Booking Confirmed! 🎉</Text>
+            <Text style={[styles.successSub, { color: colors.mutedForeground }]}>
+              {successBooking?.turfName}
+            </Text>
+            <View style={[styles.successDetails, { backgroundColor: colors.background }]}>
+              {[
+                { label: 'Date', val: successBooking?.date },
+                { label: 'Time', val: `${successBooking?.startTime} – ${successBooking?.endTime}` },
+                { label: 'Amount Paid', val: `₹${successBooking?.totalAmount}` },
+                { label: 'Payment ID', val: successBooking?.razorpayPaymentId?.slice(0, 20) + '...' },
+              ].map((row, i) => (
+                <View key={i} style={[styles.successRow, i > 0 && { borderTopWidth: 1, borderTopColor: colors.border }]}>
+                  <Text style={[styles.successRowLabel, { color: colors.mutedForeground }]}>{row.label}</Text>
+                  <Text style={[styles.successRowVal, { color: colors.text }]}>{row.val}</Text>
+                </View>
+              ))}
+            </View>
+            <Pressable onPress={() => setSuccessBooking(null)} style={styles.successDoneBtn}>
+              <LinearGradient colors={['#F97316', '#EA580C']} style={styles.successDoneBtnGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                <Text style={styles.successDoneBtnText}>Done</Text>
+              </LinearGradient>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -404,4 +450,16 @@ const styles = StyleSheet.create({
   slotTime: { fontSize: 13, fontWeight: '800' },
   slotPrice: { fontSize: 10 },
   noSlots: { fontSize: 13, paddingVertical: 20 },
+  successOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', alignItems: 'center', justifyContent: 'center', padding: 24 },
+  successCard: { width: '100%', maxWidth: 400, borderRadius: 24, padding: 28, alignItems: 'center', gap: 12 },
+  successIconWrap: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  successTitle: { fontSize: 22, fontWeight: '900', textAlign: 'center' },
+  successSub: { fontSize: 14, textAlign: 'center', marginBottom: 4 },
+  successDetails: { width: '100%', borderRadius: 14, overflow: 'hidden' },
+  successRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12 },
+  successRowLabel: { fontSize: 13 },
+  successRowVal: { fontSize: 13, fontWeight: '700' },
+  successDoneBtn: { width: '100%', marginTop: 8 },
+  successDoneBtnGrad: { paddingVertical: 16, borderRadius: 14, alignItems: 'center' },
+  successDoneBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
 });
