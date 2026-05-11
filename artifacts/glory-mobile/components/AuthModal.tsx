@@ -7,18 +7,21 @@ import {
   Pressable,
   ActivityIndicator,
   Modal,
-  Alert,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
   Dimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useLogin, useRegister, useSendOtp, useVerifyOtp } from '@workspace/api-client-react';
+import { useLogin, useRegister, useSendOtp, useVerifyOtp, useGoogleAuth } from '@workspace/api-client-react';
 import { useAuth } from '@/context/AuthContext';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
+
+WebBrowser.maybeCompleteAuthSession();
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 

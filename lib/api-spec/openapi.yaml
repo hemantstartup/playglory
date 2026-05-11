@@ -135,6 +135,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/OtpVerifyResponse"
 
+  /auth/google:
+    post:
+      operationId: googleAuth
+      tags: [auth]
+      summary: Sign in or register with Google OAuth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoogleAuthInput"
+      responses:
+        "200":
+          description: Authenticated via Google
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoogleSignInResponse"
+
   # PLAYERS
   /players:
     get:
@@ -1864,4 +1883,22 @@ components:
             $ref: "#/components/schemas/Team"
         total:
           type: integer
+
+    GoogleAuthInput:
+      type: object
+      required: [accessToken]
+      properties:
+        accessToken:
+          type: string
+
+    GoogleSignInResponse:
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+        newUser:
+          type: boolean
 

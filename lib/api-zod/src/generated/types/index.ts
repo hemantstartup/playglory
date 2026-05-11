@@ -27,6 +27,8 @@ export * from "./bookingInput";
 export * from "./bookingStatus";
 export * from "./flagMatchInput";
 export * from "./getLeaderboardParams";
+export * from "./googleAuthInput";
+export * from "./googleSignInResponse";
 export * from "./healthStatus";
 export * from "./leaderboardEntry";
 export * from "./listBookingsParams";

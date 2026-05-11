@@ -96,6 +96,30 @@ export const VerifyOtpResponse = zod.object({
 });
 
 /**
+ * @summary Sign in or register with Google OAuth
+ */
+export const GoogleAuthBody = zod.object({
+  accessToken: zod.string(),
+});
+
+export const GoogleAuthResponse = zod.object({
+  token: zod.string(),
+  user: zod.object({
+    id: zod.number(),
+    name: zod.string(),
+    phone: zod.string(),
+    email: zod.string().nullish(),
+    role: zod.enum(["player", "turf_owner", "admin"]),
+    city: zod.string().nullish(),
+    avatarUrl: zod.string().nullish(),
+    isBanned: zod.boolean().optional(),
+    isVerified: zod.boolean().optional(),
+    createdAt: zod.string(),
+  }),
+  newUser: zod.boolean().optional(),
+});
+
+/**
  * @summary List and discover players
  */
 export const ListPlayersQueryParams = zod.object({

@@ -247,4 +247,122 @@ router.post("/auth/verify-otp", async (req, res): Promise<void> => {
   res.json({ newUser: false, token, userId: newUser.id });
 });
 
+// ─── Google OAuth ─────────────────────────────────────────────────────────────
+router.post("/auth/google", async (req, res): Promise<void> => {
+  const { accessToken } = req.body as { accessToken?: string };
+
+  if (!accessToken || typeof accessToken !== "string") {
+    res.status(400).json({ error: "accessToken is required" });
+    return;
+  }
+
+  // Fetch user info from Google
+  let googleUser: { sub: string; email?: string; name?: string; picture?: string };
+  try {
+    const response = await fetch(
+      `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${encodeURIComponent(accessToken)}`,
+    );
+    if (!response.ok) {
+      res.status(401).json({ error: "Invalid Google access token" });
+      return;
+    }
+    googleUser = await response.json() as { sub: string; email?: string; name?: string; picture?: string };
+  } catch (err) {
+    req.log.error({ err }, "Google userinfo fetch failed");
+    res.status(500).json({ error: "Failed to verify Google token" });
+    return;
+  }
+
+  const { sub: googleId, email, name, picture } = googleUser;
+
+  if (!googleId) {
+    res.status(401).json({ error: "Invalid Google token: missing sub" });
+    return;
+  }
+
+  // Try to find existing user by googleId first, then by email
+  let user = (
+    await db.select().from(usersTable).where(eq(usersTable.googleId, googleId)).limit(1)
+  )[0];
+
+  if (!user && email) {
+    const byEmail = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
+    if (byEmail[0]) {
+      // Link google id to existing account
+      const updated = await db
+        .update(usersTable)
+        .set({ googleId, avatarUrl: byEmail[0].avatarUrl ?? picture ?? null, isVerified: true })
+        .where(eq(usersTable.id, byEmail[0].id))
+        .returning();
+      user = updated[0];
+    }
+  }
+
+  if (user) {
+    if (user.isBanned) {
+      res.status(403).json({ error: "Account is banned" });
+      return;
+    }
+    const token = signToken(user.id, user.role);
+    res.json({
+      token,
+      newUser: false,
+      user: {
+        id: user.id,
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
+        role: user.role,
+        city: user.city,
+        avatarUrl: user.avatarUrl,
+        isBanned: user.isBanned,
+        isVerified: user.isVerified,
+        createdAt: user.createdAt.toISOString(),
+      },
+    });
+    return;
+  }
+
+  // New Google user — create account
+  const displayName = name ?? email?.split("@")[0] ?? "Google User";
+  const passwordHash = await bcrypt.hash(Math.random().toString(36) + Date.now(), 10);
+  // Phone placeholder — unique per google account, not used for login
+  const phonePlaceholder = `google_${googleId}`.slice(0, 32);
+
+  const [newUser] = await db
+    .insert(usersTable)
+    .values({
+      name: displayName,
+      phone: phonePlaceholder,
+      email: email ?? null,
+      passwordHash,
+      googleId,
+      role: "player",
+      avatarUrl: picture ?? null,
+      isVerified: true,
+    })
+    .returning();
+
+  await db.insert(playerProfilesTable).values({ userId: newUser.id });
+  await db.insert(playerStatsTable).values({ userId: newUser.id });
+
+  const token = signToken(newUser.id, newUser.role);
+  res.json({
+    token,
+    newUser: true,
+    user: {
+      id: newUser.id,
+      name: newUser.name,
+      phone: newUser.phone,
+      email: newUser.email,
+      role: newUser.role,
+      city: newUser.city,
+      avatarUrl: newUser.avatarUrl,
+      isBanned: newUser.isBanned,
+      isVerified: newUser.isVerified,
+      createdAt: newUser.createdAt.toISOString(),
+    },
+  });
+});
+
 export default router;

@@ -557,6 +557,16 @@ export interface AdminTeamListResponse {
   total: number;
 }
 
+export interface GoogleAuthInput {
+  accessToken: string;
+}
+
+export interface GoogleSignInResponse {
+  token: string;
+  user: User;
+  newUser?: boolean;
+}
+
 export type ListPlayersParams = {
   city?: string;
   role?: string;
