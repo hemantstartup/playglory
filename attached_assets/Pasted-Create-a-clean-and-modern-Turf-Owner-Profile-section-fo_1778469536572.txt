@@ -1,0 +1,191 @@
+Create a clean and modern Turf Owner Profile section for the “Glory Sports” mobile application.
+
+IMPORTANT:
+This is only the Profile section.
+Do NOT include:
+- dashboard analytics
+- earnings charts
+- booking calendar
+- booking management
+because those modules already exist separately.
+
+The Profile section should focus only on:
+- owner identity
+- business information
+- payment details
+- account settings
+- verification
+- notification preferences
+
+The design should feel:
+- simple
+- premium
+- sporty
+- professional
+- mobile-first
+
+====================================================
+TURF OWNER PROFILE OVERVIEW
+====================================================
+
+Create a clean profile screen with:
+- modern card-based UI
+- dark sporty theme
+- smooth mobile UX
+- editable profile sections
+
+====================================================
+TOP PROFILE SECTION
+====================================================
+
+Display:
+- Profile photo
+- Owner full name
+- Verified badge
+- Turf owner role badge
+- Mobile number
+- Email address
+
+Add:
+- Edit profile button
+
+====================================================
+PERSONAL INFORMATION SECTION
+====================================================
+
+Fields:
+- Full name
+- Mobile number
+- Email
+- City
+- Language preference:
+  - Marathi
+  - Hindi
+  - English
+
+====================================================
+BUSINESS INFORMATION SECTION
+====================================================
+
+Fields:
+- Business/Turf owner name
+- Business type
+- GST number (optional)
+- Number of turfs managed
+
+====================================================
+LOCATION INFORMATION
+====================================================
+
+Fields:
+- Full address
+- Google Maps location
+- Nearby landmark
+
+====================================================
+VERIFICATION SECTION
+====================================================
+
+Display:
+- KYC verification status
+- Turf verification status
+- Verified Turf Owner badge
+
+Statuses:
+- Verified
+- Pending
+- Rejected
+
+====================================================
+PAYMENT & PAYOUT SECTION
+====================================================
+
+IMPORTANT:
+This section is used for payouts and earnings transfer.
+
+Fields:
+- Account holder name
+- Bank account number
+- IFSC code
+- UPI ID
+
+Add:
+- Secure payment information handling
+
+====================================================
+NOTIFICATION SETTINGS
+====================================================
+
+Allow owner to enable/disable:
+- Push notifications
+- WhatsApp alerts
+- Booking reminders
+- Match reminders
+
+Use modern toggle switches.
+
+====================================================
+ACCOUNT SETTINGS
+====================================================
+
+Options:
+- Change password
+- Switch role
+- Privacy settings
+- Logout
+
+====================================================
+OPTIONAL ACCOUNT SUMMARY
+====================================================
+
+Small summary cards:
+- Total turfs
+- Total bookings
+- Total matches hosted
+
+Keep this section minimal.
+
+====================================================
+UI / UX REQUIREMENTS
+====================================================
+
+Design style:
+- Premium dark theme
+- Sports-inspired UI
+- Minimal clutter
+- Smooth scrolling
+- Clean typography
+- Card-based sections
+
+Use:
+- Rounded cards
+- Modern icons
+- Clean spacing
+- Mobile-friendly layout
+
+====================================================
+BACKEND & DATABASE REQUIREMENTS
+====================================================
+
+Create scalable schema for:
+- Turf owner profiles
+- Verification data
+- Payment details
+- Notification preferences
+- Business information
+
+====================================================
+FINAL OUTPUT REQUIRED
+====================================================
+
+Generate:
+1. Complete Turf Owner Profile UI
+2. Editable profile forms
+3. Verification status system
+4. Payment information system
+5. Notification settings module
+6. Backend APIs
+7. Database schema
+8. Production-ready folder structure
+
+The final profile section should feel like a professional sports business management profile inside a modern startup-grade application.
