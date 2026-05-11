@@ -17,10 +17,16 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AdminBookingListResponse,
   AdminDashboard,
+  AdminDeleteFeedPost200,
+  AdminListBookingsParams,
+  AdminListFeedParams,
   AdminListMatchesParams,
+  AdminListTeamsParams,
   AdminListTurfsParams,
   AdminListUsersParams,
+  AdminTeamListResponse,
   AdminUserListResponse,
   AuthResponse,
   AvailabilityInput,
@@ -3805,4 +3811,463 @@ export const useAdminFlagMatch = <
   TContext
 > => {
   return useMutation(getAdminFlagMatchMutationOptions(options));
+};
+
+/**
+ * @summary Admin - list all bookings
+ */
+export const getAdminListBookingsUrl = (params?: AdminListBookingsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/admin/bookings?${stringifiedParams}`
+    : `/api/admin/bookings`;
+};
+
+export const adminListBookings = async (
+  params?: AdminListBookingsParams,
+  options?: RequestInit,
+): Promise<AdminBookingListResponse> => {
+  return customFetch<AdminBookingListResponse>(
+    getAdminListBookingsUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getAdminListBookingsQueryKey = (
+  params?: AdminListBookingsParams,
+) => {
+  return [`/api/admin/bookings`, ...(params ? [params] : [])] as const;
+};
+
+export const getAdminListBookingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminListBookings>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: AdminListBookingsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof adminListBookings>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getAdminListBookingsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof adminListBookings>>
+  > = ({ signal }) => adminListBookings(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminListBookings>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type AdminListBookingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminListBookings>>
+>;
+export type AdminListBookingsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Admin - list all bookings
+ */
+
+export function useAdminListBookings<
+  TData = Awaited<ReturnType<typeof adminListBookings>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: AdminListBookingsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof adminListBookings>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAdminListBookingsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Admin - cancel a booking
+ */
+export const getAdminCancelBookingUrl = (bookingId: number) => {
+  return `/api/admin/bookings/${bookingId}/cancel`;
+};
+
+export const adminCancelBooking = async (
+  bookingId: number,
+  options?: RequestInit,
+): Promise<Booking> => {
+  return customFetch<Booking>(getAdminCancelBookingUrl(bookingId), {
+    ...options,
+    method: "PATCH",
+  });
+};
+
+export const getAdminCancelBookingMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminCancelBooking>>,
+    TError,
+    { bookingId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminCancelBooking>>,
+  TError,
+  { bookingId: number },
+  TContext
+> => {
+  const mutationKey = ["adminCancelBooking"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminCancelBooking>>,
+    { bookingId: number }
+  > = (props) => {
+    const { bookingId } = props ?? {};
+
+    return adminCancelBooking(bookingId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminCancelBookingMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminCancelBooking>>
+>;
+
+export type AdminCancelBookingMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Admin - cancel a booking
+ */
+export const useAdminCancelBooking = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminCancelBooking>>,
+    TError,
+    { bookingId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminCancelBooking>>,
+  TError,
+  { bookingId: number },
+  TContext
+> => {
+  return useMutation(getAdminCancelBookingMutationOptions(options));
+};
+
+/**
+ * @summary Admin - list all teams
+ */
+export const getAdminListTeamsUrl = (params?: AdminListTeamsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/admin/teams?${stringifiedParams}`
+    : `/api/admin/teams`;
+};
+
+export const adminListTeams = async (
+  params?: AdminListTeamsParams,
+  options?: RequestInit,
+): Promise<AdminTeamListResponse> => {
+  return customFetch<AdminTeamListResponse>(getAdminListTeamsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getAdminListTeamsQueryKey = (params?: AdminListTeamsParams) => {
+  return [`/api/admin/teams`, ...(params ? [params] : [])] as const;
+};
+
+export const getAdminListTeamsQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminListTeams>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: AdminListTeamsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof adminListTeams>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminListTeamsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListTeams>>> = ({
+    signal,
+  }) => adminListTeams(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminListTeams>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type AdminListTeamsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminListTeams>>
+>;
+export type AdminListTeamsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Admin - list all teams
+ */
+
+export function useAdminListTeams<
+  TData = Awaited<ReturnType<typeof adminListTeams>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: AdminListTeamsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof adminListTeams>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAdminListTeamsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Admin - list all need-players posts
+ */
+export const getAdminListFeedUrl = (params?: AdminListFeedParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/admin/feed?${stringifiedParams}`
+    : `/api/admin/feed`;
+};
+
+export const adminListFeed = async (
+  params?: AdminListFeedParams,
+  options?: RequestInit,
+): Promise<NeedPlayersPost[]> => {
+  return customFetch<NeedPlayersPost[]>(getAdminListFeedUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getAdminListFeedQueryKey = (params?: AdminListFeedParams) => {
+  return [`/api/admin/feed`, ...(params ? [params] : [])] as const;
+};
+
+export const getAdminListFeedQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminListFeed>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: AdminListFeedParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof adminListFeed>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminListFeedQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof adminListFeed>>> = ({
+    signal,
+  }) => adminListFeed(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminListFeed>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type AdminListFeedQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminListFeed>>
+>;
+export type AdminListFeedQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Admin - list all need-players posts
+ */
+
+export function useAdminListFeed<
+  TData = Awaited<ReturnType<typeof adminListFeed>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: AdminListFeedParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof adminListFeed>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAdminListFeedQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Admin - delete/deactivate a need-players post
+ */
+export const getAdminDeleteFeedPostUrl = (postId: number) => {
+  return `/api/admin/feed/${postId}`;
+};
+
+export const adminDeleteFeedPost = async (
+  postId: number,
+  options?: RequestInit,
+): Promise<AdminDeleteFeedPost200> => {
+  return customFetch<AdminDeleteFeedPost200>(
+    getAdminDeleteFeedPostUrl(postId),
+    {
+      ...options,
+      method: "DELETE",
+    },
+  );
+};
+
+export const getAdminDeleteFeedPostMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminDeleteFeedPost>>,
+    TError,
+    { postId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminDeleteFeedPost>>,
+  TError,
+  { postId: number },
+  TContext
+> => {
+  const mutationKey = ["adminDeleteFeedPost"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminDeleteFeedPost>>,
+    { postId: number }
+  > = (props) => {
+    const { postId } = props ?? {};
+
+    return adminDeleteFeedPost(postId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminDeleteFeedPostMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminDeleteFeedPost>>
+>;
+
+export type AdminDeleteFeedPostMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Admin - delete/deactivate a need-players post
+ */
+export const useAdminDeleteFeedPost = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminDeleteFeedPost>>,
+    TError,
+    { postId: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminDeleteFeedPost>>,
+  TError,
+  { postId: number },
+  TContext
+> => {
+  return useMutation(getAdminDeleteFeedPostMutationOptions(options));
 };

@@ -1235,3 +1235,130 @@ export const AdminFlagMatchResponse = zod.object({
   bookingId: zod.number().nullish(),
   createdAt: zod.string(),
 });
+
+/**
+ * @summary Admin - list all bookings
+ */
+export const AdminListBookingsQueryParams = zod.object({
+  status: zod.coerce.string().optional(),
+  page: zod.coerce.number().optional(),
+  limit: zod.coerce.number().optional(),
+});
+
+export const AdminListBookingsResponse = zod.object({
+  bookings: zod.array(
+    zod.object({
+      id: zod.number(),
+      turfId: zod.number(),
+      turfName: zod.string().optional(),
+      userId: zod.number(),
+      userName: zod.string().optional(),
+      date: zod.string(),
+      startTime: zod.string(),
+      endTime: zod.string(),
+      totalAmount: zod.number().optional(),
+      status: zod.enum(["confirmed", "cancelled", "completed"]),
+      matchId: zod.number().nullish(),
+      createdAt: zod.string(),
+    }),
+  ),
+  total: zod.number(),
+  totalRevenue: zod.number().optional(),
+});
+
+/**
+ * @summary Admin - cancel a booking
+ */
+export const AdminCancelBookingParams = zod.object({
+  bookingId: zod.coerce.number(),
+});
+
+export const AdminCancelBookingResponse = zod.object({
+  id: zod.number(),
+  turfId: zod.number(),
+  turfName: zod.string().optional(),
+  userId: zod.number(),
+  userName: zod.string().optional(),
+  date: zod.string(),
+  startTime: zod.string(),
+  endTime: zod.string(),
+  totalAmount: zod.number().optional(),
+  status: zod.enum(["confirmed", "cancelled", "completed"]),
+  matchId: zod.number().nullish(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Admin - list all teams
+ */
+export const AdminListTeamsQueryParams = zod.object({
+  search: zod.coerce.string().optional(),
+  page: zod.coerce.number().optional(),
+  limit: zod.coerce.number().optional(),
+});
+
+export const AdminListTeamsResponse = zod.object({
+  teams: zod.array(
+    zod.object({
+      id: zod.number(),
+      name: zod.string(),
+      captainId: zod.number(),
+      captainName: zod.string().optional(),
+      city: zod.string().nullish(),
+      logoUrl: zod.string().nullish(),
+      sport: zod.string().optional(),
+      memberCount: zod.number().optional(),
+      winCount: zod.number().optional(),
+      matchCount: zod.number().optional(),
+      members: zod
+        .array(
+          zod.object({
+            id: zod.number(),
+            userId: zod.number(),
+            teamId: zod.number(),
+            userName: zod.string().optional(),
+            playerRole: zod.string().nullish(),
+            status: zod.enum(["pending", "active", "rejected"]),
+            joinedAt: zod.string().nullish(),
+          }),
+        )
+        .optional(),
+      createdAt: zod.string(),
+    }),
+  ),
+  total: zod.number(),
+});
+
+/**
+ * @summary Admin - list all need-players posts
+ */
+export const AdminListFeedQueryParams = zod.object({
+  city: zod.coerce.string().optional(),
+  active: zod.coerce.boolean().optional(),
+});
+
+export const AdminListFeedResponseItem = zod.object({
+  id: zod.number(),
+  userId: zod.number(),
+  userName: zod.string().optional(),
+  title: zod.string(),
+  description: zod.string().nullish(),
+  city: zod.string(),
+  sport: zod.string().optional(),
+  neededCount: zod.number().optional(),
+  joinedCount: zod.number().optional(),
+  matchDate: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+export const AdminListFeedResponse = zod.array(AdminListFeedResponseItem);
+
+/**
+ * @summary Admin - delete/deactivate a need-players post
+ */
+export const AdminDeleteFeedPostParams = zod.object({
+  postId: zod.coerce.number(),
+});
+
+export const AdminDeleteFeedPostResponse = zod.object({
+  success: zod.boolean().optional(),
+});

@@ -517,6 +517,17 @@ export interface FlagMatchInput {
   reason?: string;
 }
 
+export interface AdminBookingListResponse {
+  bookings: Booking[];
+  total: number;
+  totalRevenue?: number;
+}
+
+export interface AdminTeamListResponse {
+  teams: Team[];
+  total: number;
+}
+
 export type ListPlayersParams = {
   city?: string;
   role?: string;
@@ -577,4 +588,25 @@ export type AdminListTurfsParams = {
 export type AdminListMatchesParams = {
   suspicious?: boolean;
   status?: string;
+};
+
+export type AdminListBookingsParams = {
+  status?: string;
+  page?: number;
+  limit?: number;
+};
+
+export type AdminListTeamsParams = {
+  search?: string;
+  page?: number;
+  limit?: number;
+};
+
+export type AdminListFeedParams = {
+  city?: string;
+  active?: boolean;
+};
+
+export type AdminDeleteFeedPost200 = {
+  success?: boolean;
 };

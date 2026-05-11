@@ -952,6 +952,123 @@ paths:
               schema:
                 $ref: "#/components/schemas/Match"
 
+  /admin/bookings:
+    get:
+      operationId: adminListBookings
+      tags: [admin]
+      summary: Admin - list all bookings
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: All bookings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminBookingListResponse"
+
+  /admin/bookings/{bookingId}/cancel:
+    patch:
+      operationId: adminCancelBooking
+      tags: [admin]
+      summary: Admin - cancel a booking
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Booking cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+
+  /admin/teams:
+    get:
+      operationId: adminListTeams
+      tags: [admin]
+      summary: Admin - list all teams
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: All teams
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminTeamListResponse"
+
+  /admin/feed:
+    get:
+      operationId: adminListFeed
+      tags: [admin]
+      summary: Admin - list all need-players posts
+      parameters:
+        - name: city
+          in: query
+          schema:
+            type: string
+        - name: active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: All feed posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NeedPlayersPost"
+
+  /admin/feed/{postId}:
+    delete:
+      operationId: adminDeleteFeedPost
+      tags: [admin]
+      summary: Admin - delete/deactivate a need-players post
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Post deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
 components:
   schemas:
     HealthStatus:
@@ -1643,3 +1760,28 @@ components:
           type: boolean
         reason:
           type: string
+
+    AdminBookingListResponse:
+      type: object
+      required: [bookings, total]
+      properties:
+        bookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
+        total:
+          type: integer
+        totalRevenue:
+          type: number
+
+    AdminTeamListResponse:
+      type: object
+      required: [teams, total]
+      properties:
+        teams:
+          type: array
+          items:
+            $ref: "#/components/schemas/Team"
+        total:
+          type: integer
+

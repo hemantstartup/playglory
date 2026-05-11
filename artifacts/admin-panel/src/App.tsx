@@ -10,6 +10,10 @@ import Dashboard from "@/pages/dashboard";
 import Users from "@/pages/users";
 import Turfs from "@/pages/turfs";
 import Matches from "@/pages/matches";
+import Bookings from "@/pages/bookings";
+import Teams from "@/pages/teams";
+import Feed from "@/pages/feed";
+import Analytics from "@/pages/analytics";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -20,13 +24,13 @@ setAuthTokenGetter(() => localStorage.getItem("glory_token"));
 function ProtectedRoute({ component: Component, ...rest }: any) {
   const [location, setLocation] = useLocation();
   const token = localStorage.getItem("glory_token");
-  
+
   const { data: user, isLoading, isError } = useGetMe({
     query: {
       queryKey: getGetMeQueryKey(),
       enabled: !!token,
-      retry: false
-    }
+      retry: false,
+    },
   });
 
   useEffect(() => {
@@ -39,7 +43,11 @@ function ProtectedRoute({ component: Component, ...rest }: any) {
   }, [token, isError, user, isLoading, setLocation]);
 
   if (isLoading || !user) {
-    return <div className="min-h-screen w-full flex items-center justify-center bg-background text-foreground">Loading...</div>;
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-background text-foreground">
+        Loading...
+      </div>
+    );
   }
 
   return (
@@ -65,6 +73,10 @@ function Router() {
       <Route path="/users"><ProtectedRoute component={Users} /></Route>
       <Route path="/turfs"><ProtectedRoute component={Turfs} /></Route>
       <Route path="/matches"><ProtectedRoute component={Matches} /></Route>
+      <Route path="/bookings"><ProtectedRoute component={Bookings} /></Route>
+      <Route path="/teams"><ProtectedRoute component={Teams} /></Route>
+      <Route path="/feed"><ProtectedRoute component={Feed} /></Route>
+      <Route path="/analytics"><ProtectedRoute component={Analytics} /></Route>
       <Route component={NotFound} />
     </Switch>
   );
