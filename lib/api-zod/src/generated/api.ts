@@ -67,6 +67,35 @@ export const GetMeResponse = zod.object({
 });
 
 /**
+ * @summary Send OTP to phone number
+ */
+export const SendOtpBody = zod.object({
+  phone: zod.string(),
+});
+
+export const SendOtpResponse = zod.object({
+  message: zod.string(),
+  devOtp: zod.string().nullish(),
+});
+
+/**
+ * @summary Verify OTP and authenticate or register
+ */
+export const VerifyOtpBody = zod.object({
+  phone: zod.string(),
+  otp: zod.string(),
+  name: zod.string().nullish(),
+  role: zod.string().nullish(),
+  city: zod.string().nullish(),
+});
+
+export const VerifyOtpResponse = zod.object({
+  newUser: zod.boolean(),
+  token: zod.string().nullish(),
+  userId: zod.number().nullish(),
+});
+
+/**
  * @summary List and discover players
  */
 export const ListPlayersQueryParams = zod.object({

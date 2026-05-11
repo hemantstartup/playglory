@@ -33,6 +33,35 @@ export interface LoginInput {
   password: string;
 }
 
+export interface OtpSendInput {
+  phone: string;
+}
+
+export interface OtpSendResponse {
+  message: string;
+  /** @nullable */
+  devOtp?: string | null;
+}
+
+export interface OtpVerifyInput {
+  phone: string;
+  otp: string;
+  /** @nullable */
+  name?: string | null;
+  /** @nullable */
+  role?: string | null;
+  /** @nullable */
+  city?: string | null;
+}
+
+export interface OtpVerifyResponse {
+  newUser: boolean;
+  /** @nullable */
+  token?: string | null;
+  /** @nullable */
+  userId?: number | null;
+}
+
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export const UserRole = {
