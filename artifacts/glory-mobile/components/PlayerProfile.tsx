@@ -8,12 +8,26 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useColors } from '@/hooks/useColors';
 import {
   useGetMe, useGetPlayerStats, useUpdateMyProfile,
-  useListMatches, useListBookings,
+  useListMatches, useListBookings, useGetPlayer, useUpdateAvailability,
 } from '@workspace/api-client-react';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/context/AuthContext';
 import * as Haptics from 'expo-haptics';
+
+const PLAYER_ROLES = [
+  { label: 'Batsman', value: 'batsman' },
+  { label: 'Bowler', value: 'bowler' },
+  { label: 'All-rounder', value: 'all_rounder' },
+  { label: 'Keeper', value: 'wicket_keeper' },
+];
+
+const AVAIL_OPTIONS = [
+  { key: 'available_today', label: 'Available Today', color: '#10B981' },
+  { key: 'available_weekend', label: 'Weekend Only', color: '#3B82F6' },
+  { key: 'looking_for_team', label: 'Looking for Team', color: '#F59E0B' },
+  { key: 'unavailable', label: 'Away', color: '#EF4444' },
+] as const;
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const DRAWER_WIDTH = SCREEN_W * 0.85;
@@ -35,11 +49,21 @@ export default function PlayerProfile() {
   const { data: bookings } = useListBookings();
 
   const [city, setCity] = useState('');
+  const [playerRole, setPlayerRole] = useState('');
+  const [battingStyle, setBattingStyle] = useState('');
+  const [bowlingStyle, setBowlingStyle] = useState('');
   const updateProfile = useUpdateMyProfile();
+  const updateAvail = useUpdateAvailability();
+  const { data: playerProfile } = useGetPlayer(me?.id as number, { query: { enabled: !!me?.id } as any });
 
   useEffect(() => {
     if (me) { setCity(me.city || ''); }
-  }, [me]);
+    if (playerProfile) {
+      setPlayerRole((playerProfile as any).playerRole || '');
+      setBattingStyle((playerProfile as any).battingStyle || '');
+      setBowlingStyle((playerProfile as any).bowlingStyle || '');
+    }
+  }, [me, playerProfile]);
 
   const openDrawer = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -54,7 +78,7 @@ export default function PlayerProfile() {
   const handleUpdate = async () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     try {
-      await updateProfile.mutateAsync({ data: { city } });
+      await updateProfile.mutateAsync({ data: { city, playerRole: playerRole as any, battingStyle, bowlingStyle } });
       setEditOpen(false);
       refetch();
     } catch (e: any) {
@@ -71,9 +95,12 @@ export default function PlayerProfile() {
   };
 
   const meAny = me as any;
-  const trustScore = meAny?.trustScore ?? 0;
+  const pp = playerProfile as any;
+  const trustScore = pp?.trustScore ?? 0;
   const trustColor = trustScore >= 80 ? '#10B981' : trustScore >= 50 ? '#F97316' : '#EF4444';
-  const isAvailable = meAny?.availabilityStatus != null && meAny?.availabilityStatus !== 'unavailable';
+  const availStatus = pp?.availabilityStatus;
+  const isAvailable = availStatus != null && availStatus !== 'unavailable';
+  const currentAvail = AVAIL_OPTIONS.find(o => o.key === availStatus);
 
   if (isLoading) {
     return (
@@ -117,11 +144,24 @@ export default function PlayerProfile() {
               <View style={[styles.chip, { backgroundColor: '#F9731625', borderColor: '#F97316' }]}>
                 <Text style={[styles.chipText, { color: '#F97316' }]}>{me?.role?.toUpperCase()}</Text>
               </View>
-              {meAny?.playerRole ? (
+              {pp?.playerRole ? (
                 <View style={[styles.chip, { backgroundColor: '#3B82F625', borderColor: '#3B82F6' }]}>
-                  <Text style={[styles.chipText, { color: '#3B82F6' }]}>{meAny.playerRole}</Text>
+                  <Text style={[styles.chipText, { color: '#3B82F6' }]}>{pp.playerRole.replace('_', ' ')}</Text>
                 </View>
               ) : null}
+              {currentAvail && (
+                <Pressable
+                  onPress={() => {
+                    const nextIdx = (AVAIL_OPTIONS.findIndex(o => o.key === availStatus) + 1) % AVAIL_OPTIONS.length;
+                    const next = AVAIL_OPTIONS[nextIdx]!;
+                    Haptics.selectionAsync();
+                    updateAvail.mutateAsync({ data: { status: next.key } });
+                  }}
+                  style={[styles.chip, { backgroundColor: currentAvail.color + '25', borderColor: currentAvail.color }]}
+                >
+                  <Text style={[styles.chipText, { color: currentAvail.color }]}>{currentAvail.label}</Text>
+                </Pressable>
+              )}
             </View>
           </View>
 
@@ -320,7 +360,7 @@ export default function PlayerProfile() {
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.activityTitle, { color: colors.text }]}>{b.turfName || `Turf #${b.turfId}`}</Text>
                       <Text style={[styles.activitySub, { color: colors.mutedForeground }]}>{b.date} · {b.startTime} → {b.endTime}</Text>
-                      <Text style={[styles.activitySub, { color: colors.primary }]}>₹{b.totalPrice}</Text>
+                      <Text style={[styles.activitySub, { color: colors.primary }]}>₹{b.totalAmount}</Text>
                     </View>
                     <View style={[styles.matchStatusBadge, { backgroundColor: '#10B98120' }]}>
                       <Text style={[styles.matchStatusText, { color: '#10B981' }]}>{b.status || 'booked'}</Text>
@@ -346,19 +386,60 @@ export default function PlayerProfile() {
                   </Pressable>
                 </View>
 
-                <View style={styles.editBody}>
+                <ScrollView style={styles.editBody} showsVerticalScrollIndicator={false}>
+                  <Text style={[styles.editFieldLabel, { color: colors.mutedForeground }]}>City</Text>
                   <View style={[styles.editInput, { backgroundColor: colors.background, borderColor: colors.border }]}>
                     <Ionicons name="location-outline" size={16} color={colors.mutedForeground} style={{ marginRight: 8 }} />
                     <TextInput
                       style={[styles.editInputText, { color: colors.text }]}
                       value={city}
                       onChangeText={setCity}
-                      placeholder="City"
+                      placeholder="Mumbai, Delhi..."
                       placeholderTextColor={colors.mutedForeground}
                     />
                   </View>
 
-                  <View style={styles.editActions}>
+                  <Text style={[styles.editFieldLabel, { color: colors.mutedForeground, marginTop: 12 }]}>Player Role</Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                    {PLAYER_ROLES.map(r => (
+                      <Pressable
+                        key={r.value}
+                        onPress={() => setPlayerRole(r.value)}
+                        style={[styles.roleChip, {
+                          backgroundColor: playerRole === r.value ? colors.primary : colors.background,
+                          borderColor: playerRole === r.value ? colors.primary : colors.border,
+                        }]}
+                      >
+                        <Text style={[styles.roleChipText, { color: playerRole === r.value ? '#fff' : colors.text }]}>{r.label}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+
+                  <Text style={[styles.editFieldLabel, { color: colors.mutedForeground, marginTop: 12 }]}>Batting Style</Text>
+                  <View style={[styles.editInput, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                    <Feather name="activity" size={16} color={colors.mutedForeground} style={{ marginRight: 8 }} />
+                    <TextInput
+                      style={[styles.editInputText, { color: colors.text }]}
+                      value={battingStyle}
+                      onChangeText={setBattingStyle}
+                      placeholder="Right-hand, Left-hand..."
+                      placeholderTextColor={colors.mutedForeground}
+                    />
+                  </View>
+
+                  <Text style={[styles.editFieldLabel, { color: colors.mutedForeground, marginTop: 12 }]}>Bowling Style</Text>
+                  <View style={[styles.editInput, { backgroundColor: colors.background, borderColor: colors.border }]}>
+                    <Feather name="rotate-cw" size={16} color={colors.mutedForeground} style={{ marginRight: 8 }} />
+                    <TextInput
+                      style={[styles.editInputText, { color: colors.text }]}
+                      value={bowlingStyle}
+                      onChangeText={setBowlingStyle}
+                      placeholder="Fast, Spin, Medium..."
+                      placeholderTextColor={colors.mutedForeground}
+                    />
+                  </View>
+
+                  <View style={[styles.editActions, { marginTop: 16 }]}>
                     <Pressable onPress={() => setEditOpen(false)} style={[styles.cancelBtn, { borderColor: colors.border }]}>
                       <Text style={[styles.cancelBtnText, { color: colors.mutedForeground }]}>Cancel</Text>
                     </Pressable>
@@ -371,7 +452,7 @@ export default function PlayerProfile() {
                       </LinearGradient>
                     </Pressable>
                   </View>
-                </View>
+                </ScrollView>
               </View>
             </Pressable>
           </KeyboardAvoidingView>
@@ -448,10 +529,13 @@ const styles = StyleSheet.create({
   editSheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24 },
   editHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1 },
   editTitle: { fontSize: 18, fontWeight: '800' },
-  editBody: { padding: 20, gap: 12 },
+  editBody: { padding: 20, gap: 12, maxHeight: 480 },
+  editFieldLabel: { fontSize: 12, fontWeight: '600', marginBottom: 4 },
   editInput: { flexDirection: 'row', alignItems: 'center', borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, height: 50 },
   editInputText: { flex: 1, fontSize: 15 },
   editActions: { flexDirection: 'row', gap: 12, marginTop: 8 },
+  roleChip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 12, borderWidth: 1.5 },
+  roleChipText: { fontSize: 12, fontWeight: '700' },
   cancelBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, alignItems: 'center', borderWidth: 1 },
   cancelBtnText: { fontSize: 15, fontWeight: '600' },
   saveBtn: { flex: 2, borderRadius: 12, overflow: 'hidden' },

@@ -4,7 +4,7 @@ import {
   ActivityIndicator, RefreshControl, Platform, Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useListBookings } from '@workspace/api-client-react';
+import { useListBookings, useGetMyTurfs } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,10 +24,19 @@ export default function TurfBookings() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]!);
-  const [filter, setFilter] = useState<'all' | 'confirmed' | 'cancelled'>('all');
+  const [filter, setFilter] = useState<'all' | 'confirmed' | 'cancelled' | 'completed'>('all');
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedTurfIdx, setSelectedTurfIdx] = useState(0);
 
-  const { data: bookings, isLoading, refetch } = useListBookings();
+  const { data: myTurfs, isLoading: loadingTurfs } = useGetMyTurfs();
+  const selectedTurf = myTurfs?.[selectedTurfIdx];
+
+  const {
+    data: bookings, isLoading, refetch,
+  } = useListBookings(
+    selectedTurf?.id ? { turfId: selectedTurf.id } : {},
+    { query: { enabled: true } as any }
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -44,6 +53,27 @@ export default function TurfBookings() {
   const todayCount = bookings?.filter(b => b.date === todayStr).length ?? 0;
   const upcomingCount = bookings?.filter(b => b.date! > todayStr!).length ?? 0;
   const confirmedCount = bookings?.filter(b => b.status === 'confirmed').length ?? 0;
+  const totalRevenue = bookings?.filter(b => b.status !== 'cancelled').reduce((s, b) => s + (b.totalAmount ?? 0), 0) ?? 0;
+
+  if (loadingTurfs) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator color={colors.primary} size="large" />
+      </View>
+    );
+  }
+
+  if (!myTurfs || myTurfs.length === 0) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', padding: 40 }]}>
+        <Text style={{ fontSize: 48 }}>🏟️</Text>
+        <Text style={[styles.title, { color: colors.text, textAlign: 'center', marginTop: 16 }]}>No Turfs Yet</Text>
+        <Text style={[styles.sub, { color: colors.mutedForeground, textAlign: 'center', marginTop: 8 }]}>
+          Register a turf from the My Turfs tab to see bookings here.
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView
@@ -58,12 +88,53 @@ export default function TurfBookings() {
         <Text style={[styles.sub, { color: colors.mutedForeground }]}>Manage incoming bookings</Text>
       </View>
 
+      {/* Turf Selector (if multiple turfs) */}
+      {myTurfs.length > 1 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingHorizontal: 16, marginBottom: 12 }}>
+          {myTurfs.map((turf, idx) => (
+            <Pressable
+              key={turf.id}
+              onPress={() => { Haptics.selectionAsync(); setSelectedTurfIdx(idx); }}
+              style={[styles.turfChip, {
+                backgroundColor: selectedTurfIdx === idx ? colors.primary : colors.card,
+                borderColor: selectedTurfIdx === idx ? colors.primary : colors.border,
+              }]}
+            >
+              <Text style={[styles.turfChipText, { color: selectedTurfIdx === idx ? '#fff' : colors.text }]}>
+                {turf.name}
+              </Text>
+              {turf.verificationStatus === 'verified' && (
+                <Text style={{ color: selectedTurfIdx === idx ? '#fff' : '#10B981', fontSize: 10 }}>✓</Text>
+              )}
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
+
+      {/* Turf Name */}
+      {selectedTurf && (
+        <View style={[styles.turfBanner, { backgroundColor: colors.card }]}>
+          <Ionicons name="business-outline" size={16} color={colors.primary} />
+          <Text style={[styles.turfBannerText, { color: colors.text }]}>{selectedTurf.name}</Text>
+          <View style={[styles.verifyBadge, {
+            backgroundColor: selectedTurf.verificationStatus === 'verified' ? '#10B98120' : '#F59E0B20',
+          }]}>
+            <Text style={[styles.verifyText, {
+              color: selectedTurf.verificationStatus === 'verified' ? '#10B981' : '#F59E0B',
+            }]}>
+              {selectedTurf.verificationStatus === 'verified' ? '✓ Verified' : '⏳ Pending'}
+            </Text>
+          </View>
+        </View>
+      )}
+
       {/* Quick Stats */}
       <View style={styles.statsRow}>
         {[
-          { label: "Today", value: todayCount, color: colors.primary },
-          { label: "Upcoming", value: upcomingCount, color: '#3B82F6' },
-          { label: "Confirmed", value: confirmedCount, color: '#10B981' },
+          { label: 'Today', value: todayCount, color: colors.primary },
+          { label: 'Upcoming', value: upcomingCount, color: '#3B82F6' },
+          { label: 'Confirmed', value: confirmedCount, color: '#10B981' },
+          { label: 'Revenue', value: `₹${totalRevenue >= 1000 ? (totalRevenue / 1000).toFixed(1) + 'k' : totalRevenue}`, color: '#F59E0B' },
         ].map((s, i) => (
           <View key={i} style={[styles.statCard, { backgroundColor: colors.card }]}>
             <Text style={[styles.statValue, { color: s.color }]}>{s.value}</Text>
@@ -101,7 +172,7 @@ export default function TurfBookings() {
 
       {/* Filter tabs */}
       <View style={[styles.filterTabs, { backgroundColor: colors.card }]}>
-        {(['all', 'confirmed', 'cancelled'] as const).map(f => (
+        {(['all', 'confirmed', 'completed', 'cancelled'] as const).map(f => (
           <Pressable
             key={f}
             onPress={() => { Haptics.selectionAsync(); setFilter(f); }}
@@ -125,17 +196,23 @@ export default function TurfBookings() {
         ) : filtered.length === 0 ? (
           <View style={[styles.emptyCard, { backgroundColor: colors.card }]}>
             <Text style={{ fontSize: 40 }}>📭</Text>
-            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>No bookings on this day</Text>
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>No {filter === 'all' ? '' : filter + ' '}bookings on this day</Text>
           </View>
         ) : (
           filtered.map(b => (
             <View key={b.id} style={[styles.bookingCard, { backgroundColor: colors.card }]}>
               <View style={styles.bookingTop}>
                 <LinearGradient
-                  colors={b.status === 'confirmed' ? ['#10B98120', '#10B98108'] : ['#EF444420', '#EF444408']}
+                  colors={
+                    b.status === 'confirmed' ? ['#10B98120', '#10B98108'] :
+                    b.status === 'completed' ? ['#3B82F620', '#3B82F608'] :
+                    ['#EF444420', '#EF444408']
+                  }
                   style={styles.timeBlock}
                 >
-                  <Text style={[styles.timeStart, { color: b.status === 'confirmed' ? '#10B981' : '#EF4444' }]}>
+                  <Text style={[styles.timeStart, {
+                    color: b.status === 'confirmed' ? '#10B981' : b.status === 'completed' ? '#3B82F6' : '#EF4444'
+                  }]}>
                     {b.startTime}
                   </Text>
                   <Text style={[styles.timeDivider, { color: colors.mutedForeground }]}>–</Text>
@@ -151,18 +228,26 @@ export default function TurfBookings() {
                     </View>
                     <View>
                       <Text style={[styles.playerName, { color: colors.text }]}>{b.userName || 'Player'}</Text>
-                      <Text style={[styles.turfName, { color: colors.mutedForeground }]}>{b.turfName}</Text>
+                      <Text style={[styles.turfNameText, { color: colors.mutedForeground }]}>Booking #{b.id}</Text>
                     </View>
                   </View>
                 </View>
 
                 <View style={styles.bookingRight}>
-                  <Text style={[styles.amount, { color: '#10B981' }]}>₹{b.totalAmount}</Text>
+                  <Text style={[styles.amount, { color: '#10B981' }]}>
+                    {b.totalAmount ? `₹${b.totalAmount}` : '—'}
+                  </Text>
                   <View style={[styles.statusBadge, {
-                    backgroundColor: b.status === 'confirmed' ? '#10B98120' : '#EF444420'
+                    backgroundColor:
+                      b.status === 'confirmed' ? '#10B98120' :
+                      b.status === 'completed' ? '#3B82F620' :
+                      '#EF444420'
                   }]}>
                     <Text style={[styles.statusText, {
-                      color: b.status === 'confirmed' ? '#10B981' : '#EF4444'
+                      color:
+                        b.status === 'confirmed' ? '#10B981' :
+                        b.status === 'completed' ? '#3B82F6' :
+                        '#EF4444'
                     }]}>
                       {b.status?.toUpperCase()}
                     </Text>
@@ -173,7 +258,7 @@ export default function TurfBookings() {
               {b.matchId && (
                 <View style={[styles.matchLinked, { backgroundColor: colors.primary + '10', borderColor: colors.primary + '30' }]}>
                   <Ionicons name="trophy-outline" size={14} color={colors.primary} />
-                  <Text style={[styles.matchLinkedText, { color: colors.primary }]}>Match linked to this booking</Text>
+                  <Text style={[styles.matchLinkedText, { color: colors.primary }]}>Linked to Match #{b.matchId}</Text>
                 </View>
               )}
             </View>
@@ -186,21 +271,27 @@ export default function TurfBookings() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingHorizontal: 20, marginBottom: 16 },
+  header: { paddingHorizontal: 20, marginBottom: 12 },
   title: { fontSize: 24, fontWeight: '900', fontFamily: 'Inter_700Bold' },
   sub: { fontSize: 13, marginTop: 2 },
-  statsRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 10, marginBottom: 16 },
-  statCard: { flex: 1, borderRadius: 14, padding: 14, alignItems: 'center' },
-  statValue: { fontSize: 22, fontWeight: '900' },
-  statLabel: { fontSize: 11, marginTop: 2 },
+  turfChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5 },
+  turfChipText: { fontSize: 13, fontWeight: '700' },
+  turfBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginBottom: 12, borderRadius: 12, padding: 12 },
+  turfBannerText: { flex: 1, fontSize: 14, fontWeight: '700' },
+  verifyBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+  verifyText: { fontSize: 11, fontWeight: '700' },
+  statsRow: { flexDirection: 'row', paddingHorizontal: 16, gap: 8, marginBottom: 16 },
+  statCard: { flex: 1, borderRadius: 14, padding: 10, alignItems: 'center' },
+  statValue: { fontSize: 18, fontWeight: '900' },
+  statLabel: { fontSize: 10, marginTop: 2 },
   weekStrip: { flexDirection: 'row', marginHorizontal: 16, borderRadius: 16, padding: 8, marginBottom: 12, gap: 4 },
   dayCell: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 12, gap: 2 },
   dayCellDay: { fontSize: 9, fontWeight: '600' },
   dayCellDate: { fontSize: 15, fontWeight: '900' },
   dayCellDot: { width: 5, height: 5, borderRadius: 3 },
   filterTabs: { flexDirection: 'row', marginHorizontal: 16, borderRadius: 12, padding: 4, gap: 4, marginBottom: 16 },
-  filterTab: { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
-  filterTabText: { fontSize: 12, fontWeight: '700' },
+  filterTab: { flex: 1, paddingVertical: 7, borderRadius: 8, alignItems: 'center' },
+  filterTabText: { fontSize: 10, fontWeight: '700' },
   bookingSection: { paddingHorizontal: 16 },
   sectionTitle: { fontSize: 15, fontWeight: '800', marginBottom: 12 },
   emptyCard: { borderRadius: 20, padding: 40, alignItems: 'center', gap: 12 },
@@ -216,7 +307,7 @@ const styles = StyleSheet.create({
   playerAvatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   playerAvatarText: { fontSize: 14, fontWeight: '800' },
   playerName: { fontSize: 14, fontWeight: '700' },
-  turfName: { fontSize: 11, marginTop: 2 },
+  turfNameText: { fontSize: 11, marginTop: 2 },
   bookingRight: { alignItems: 'flex-end', gap: 6 },
   amount: { fontSize: 16, fontWeight: '900' },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },

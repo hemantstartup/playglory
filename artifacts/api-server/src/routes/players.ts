@@ -129,12 +129,15 @@ router.put("/players/me/profile", authenticate, async (req, res): Promise<void> 
 
   const [existing] = await db.select().from(playerProfilesTable).where(eq(playerProfilesTable.userId, user.id)).limit(1);
   if (existing) {
-    await db.update(playerProfilesTable).set({
+    const profileUpdates = {
       ...(playerRole ? { playerRole } : {}),
       ...(battingStyle ? { battingStyle } : {}),
       ...(bowlingStyle ? { bowlingStyle } : {}),
-    }).where(eq(playerProfilesTable.userId, user.id));
-  } else {
+    };
+    if (Object.keys(profileUpdates).length > 0) {
+      await db.update(playerProfilesTable).set(profileUpdates).where(eq(playerProfilesTable.userId, user.id));
+    }
+  } else if (playerRole || battingStyle || bowlingStyle) {
     await db.insert(playerProfilesTable).values({ userId: user.id, playerRole, battingStyle, bowlingStyle });
   }
 
