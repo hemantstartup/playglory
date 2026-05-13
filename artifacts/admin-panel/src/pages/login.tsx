@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useLogin, useRegister } from "@workspace/api-client-react";
 import { Trophy, Loader2 } from "lucide-react";
-import axios from "axios";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -68,36 +67,35 @@ export default function Login() {
       }
     );
   }
-async function onLogin(values: z.infer<typeof loginSchema>) {
-  try {
-    const response = await axios.post(
-      "https://playglory-api-server.vercel.app/api/auth/login",
-      values
+  function onLogin(values: z.infer<typeof loginSchema>) {
+    loginMutation.mutate(
+      { data: values },
+      {
+        onSuccess: (data: any) => {
+          if (data.user?.role !== "admin") {
+            toast({
+              title: "Access Denied",
+              description:
+                "This panel is for admins only. Your account role is: " +
+                data.user?.role,
+              variant: "destructive",
+            });
+            return;
+          }
+          localStorage.setItem("glory_token", data.token);
+          setLocation("/dashboard");
+        },
+        onError: (error: any) => {
+          toast({
+            title: "Login Failed",
+            description:
+              error?.data?.message || error?.message || "Invalid credentials.",
+            variant: "destructive",
+          });
+        },
+      }
     );
-
-    const data = response.data;
-
-    if (data.user.role !== "admin") {
-      toast({
-        title: "Access Denied",
-        description:
-          "This panel is for admins only. Your account role is: " +
-          data.user.role,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    localStorage.setItem("glory_token", data.token);
-    setLocation("/dashboard");
-  } catch (error: any) {
-    toast({
-      title: "Login Failed",
-      description: error?.response?.data?.message || error.message,
-      variant: "destructive",
-    });
   }
-}
   return (
     <div className="min-h-screen w-full bg-background flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
