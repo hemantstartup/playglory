@@ -156,6 +156,10 @@ overrides:
 importers:
 
   .:
+    dependencies:
+      axios:
+        specifier: ^1.16.0
+        version: 1.16.0
     devDependencies:
       prettier:
         specifier: ^3.8.1
