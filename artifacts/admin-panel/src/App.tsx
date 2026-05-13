@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useEffect } from "react";
-import { setAuthTokenGetter, useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
+import { setAuthTokenGetter, setBaseUrl, useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 
 import { Layout } from "@/components/layout";
 import Dashboard from "@/pages/dashboard";
@@ -18,6 +18,13 @@ import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
+
+// When deployed to Vercel (or any host where the API is on a different domain),
+// set VITE_API_URL to the API server's base URL, e.g. https://playglory-api-server.vercel.app
+const apiUrl = import.meta.env["VITE_API_URL"] as string | undefined;
+if (apiUrl) {
+  setBaseUrl(apiUrl);
+}
 
 setAuthTokenGetter(() => localStorage.getItem("glory_token"));
 

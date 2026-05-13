@@ -27,8 +27,12 @@ app.use(
 );
 app.use(
   cors({
-    origin: "*",
+    // Echo back the request origin so `credentials: true` is compatible
+    // with any domain (Replit, Vercel, custom domains, localhost, etc.)
+    origin: (origin, callback) => callback(null, origin ?? "*"),
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 app.use(express.json());
