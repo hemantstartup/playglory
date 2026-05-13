@@ -48,32 +48,7 @@ export default function Login() {
     defaultValues: { name: "", phone: "", password: "", city: "" },
   });
 
-  function onLogin(values: z.infer<typeof loginSchema>) {
-    loginMutation.mutate(
-      { data: values },
-      {
-        onSuccess: (data) => {
-          if (data.user.role !== "admin") {
-            toast({
-              title: "Access Denied",
-              description: "This panel is for admins only. Your account role is: " + data.user.role,
-              variant: "destructive",
-            });
-            return;
-          }
-          localStorage.setItem("glory_token", data.token);
-          setLocation("/dashboard");
-        },
-        onError: (error: any) => {
-          toast({
-            title: "Login Failed",
-            description: error.message || "Invalid phone number or password.",
-            variant: "destructive",
-          });
-        },
-      }
-    );
-  }
+ 
 
   function onRegister(values: z.infer<typeof registerSchema>) {
     registerMutation.mutate(
@@ -93,7 +68,36 @@ export default function Login() {
       }
     );
   }
+async function onLogin(values: z.infer<typeof loginSchema>) {
+  try {
+    const response = await axios.post(
+      "https://playglory-api-server.vercel.app/api/auth/login",
+      values
+    );
 
+    const data = response.data;
+
+    if (data.user.role !== "admin") {
+      toast({
+        title: "Access Denied",
+        description:
+          "This panel is for admins only. Your account role is: " +
+          data.user.role,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    localStorage.setItem("glory_token", data.token);
+    setLocation("/dashboard");
+  } catch (error: any) {
+    toast({
+      title: "Login Failed",
+      description: error?.response?.data?.message || error.message,
+      variant: "destructive",
+    });
+  }
+}
   return (
     <div className="min-h-screen w-full bg-background flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
