@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useLogin, useRegister } from "@workspace/api-client-react";
 import { Trophy, Loader2 } from "lucide-react";
-
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import {
   Form,
