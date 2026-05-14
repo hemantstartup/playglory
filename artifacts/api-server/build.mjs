@@ -54,16 +54,24 @@ async function buildAll() {
     banner: BANNER,
   });
 
-  // Vercel serverless bundle — CJS, self-contained
-  const handlerOut = path.resolve(artifactDir, "api/handler.js");
+  // Vercel serverless bundle — ESM, self-contained
+  // Must be ESM (not CJS) because the monorepo has "type":"module" in package.json,
+  // which causes Node.js to load .js files as ESM. Using .mjs forces ESM and the
+  // BANNER patches require/filename/dirname for packages that still need them.
+  // Use outdir (not outfile) because esbuildPluginPino emits extra worker files.
+  const vercelBuildDir = path.resolve(artifactDir, "api/vercel-build");
+  await rm(vercelBuildDir, { recursive: true, force: true });
   await esbuild({
     entryPoints: [path.resolve(artifactDir, "src/vercel-handler.ts")],
     platform: "node",
     bundle: true,
-    format: "cjs",
-    outfile: handlerOut,
+    format: "esm",
+    outdir: vercelBuildDir,
+    outExtension: { ".js": ".mjs" },
     logLevel: "info",
-    external: [...EXTERNALS, "pino-pretty", "thread-stream"],
+    external: [...EXTERNALS, "pino-pretty"],
+    plugins: [esbuildPluginPino({ transports: ["pino-pretty"] })],
+    banner: BANNER,
   });
 
   // --- Vercel Build Output API v3 ---
@@ -74,15 +82,24 @@ async function buildAll() {
   await rm(vercelOut, { recursive: true, force: true });
   await mkdir(funcDir, { recursive: true });
 
-  // Copy the bundled handler into the function directory
-  await copyFile(handlerOut, path.resolve(funcDir, "index.js"));
+  // Copy ALL files from vercel build (handler + pino worker files) into function dir.
+  // Rename the main entry point to index.mjs to match .vc-config.json handler field.
+  const { readdir } = await import("node:fs/promises");
+  const vercelFiles = await readdir(vercelBuildDir);
+  for (const file of vercelFiles) {
+    const destName = file === "vercel-handler.mjs" ? "index.mjs" : file;
+    await copyFile(
+      path.resolve(vercelBuildDir, file),
+      path.resolve(funcDir, destName),
+    );
+  }
 
   // Function runtime config
   await writeFile(
     path.resolve(funcDir, ".vc-config.json"),
     JSON.stringify({
-      runtime: "nodejs18.x",
-      handler: "index.js",
+      runtime: "nodejs22.x",
+      handler: "index.mjs",
       launcherType: "Nodejs",
       shouldAddHelpers: true,
     }, null, 2)
