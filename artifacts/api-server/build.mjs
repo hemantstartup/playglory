@@ -115,20 +115,17 @@ async function buildAll() {
     banner: BANNER,
   });
 
-  // Vercel serverless bundle — exports the Express app without calling listen()
-  // Vercel provides its own HTTP layer, so we only need the app handler.
-  // No pino-pretty plugin here: pino workers are incompatible with outfile mode
-  // and pretty-printing is not needed in a Vercel serverless environment.
+  // Vercel serverless bundle — CJS format so Vercel auto-discovers it from api/
+  // Vercel picks up any .js file in the api/ directory as a serverless function.
+  // CJS format avoids ESM/banner issues in the Vercel runtime.
   await esbuild({
     entryPoints: [path.resolve(artifactDir, "src/vercel-handler.ts")],
     platform: "node",
     bundle: true,
-    format: "esm",
-    outfile: path.resolve(distDir, "vercel.mjs"),
+    format: "cjs",
+    outfile: path.resolve(artifactDir, "api/handler.js"),
     logLevel: "info",
     external: [...EXTERNALS, "pino-pretty", "thread-stream"],
-    sourcemap: "linked",
-    banner: BANNER,
   });
 }
 
