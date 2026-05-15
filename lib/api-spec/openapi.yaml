@@ -1196,7 +1196,7 @@ components:
           type: string
         role:
           type: string
-          enum: [player, turf_owner]
+          enum: [player, turf_owner, admin]
         city:
           type: ["string", "null"]
 
