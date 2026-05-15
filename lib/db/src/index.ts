@@ -4,9 +4,13 @@ import * as schema from "./schema";
 
 const { Pool } = pg;
 
+// Do NOT throw at module load — that causes FUNCTION_INVOCATION_FAILED on every
+// cold start if DATABASE_URL hasn't been set in the deployment env yet.
+// The pool will fail gracefully on first query, giving a proper 500 instead.
 if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
+  console.error(
+    "[db] DATABASE_URL is not set — all database queries will fail. " +
+    "Set it in Vercel → Settings → Environment Variables.",
   );
 }
 

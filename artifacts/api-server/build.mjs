@@ -98,7 +98,7 @@ async function buildAll() {
   await writeFile(
     path.resolve(funcDir, ".vc-config.json"),
     JSON.stringify({
-      runtime: "nodejs22.x",
+      runtime: "nodejs20.x",
       handler: "index.mjs",
       launcherType: "Nodejs",
       shouldAddHelpers: true,
