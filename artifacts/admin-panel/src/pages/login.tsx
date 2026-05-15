@@ -144,7 +144,13 @@ export default function Login() {
                       <FormItem>
                         <FormLabel>Phone Number</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter your phone number" {...field} />
+                          <Input
+                            placeholder="Enter your phone number"
+                            autoComplete="tel"
+                            inputMode="numeric"
+                            disabled={loginMutation.isPending}
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -157,7 +163,13 @@ export default function Login() {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input type="password" placeholder="Enter your password" {...field} />
+                          <Input
+                            type="password"
+                            placeholder="Enter your password"
+                            autoComplete="current-password"
+                            disabled={loginMutation.isPending}
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -180,7 +192,12 @@ export default function Login() {
                       <FormItem>
                         <FormLabel>Full Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter your full name" {...field} />
+                          <Input
+                            placeholder="Enter your full name"
+                            autoComplete="name"
+                            disabled={registerMutation.isPending}
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -193,7 +210,13 @@ export default function Login() {
                       <FormItem>
                         <FormLabel>Phone Number</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter your phone number" {...field} />
+                          <Input
+                            placeholder="Enter your phone number"
+                            autoComplete="tel"
+                            inputMode="numeric"
+                            disabled={registerMutation.isPending}
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -206,7 +229,13 @@ export default function Login() {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input type="password" placeholder="Create a password" {...field} />
+                          <Input
+                            type="password"
+                            placeholder="Create a password"
+                            autoComplete="new-password"
+                            disabled={registerMutation.isPending}
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -219,7 +248,12 @@ export default function Login() {
                       <FormItem>
                         <FormLabel>City <span className="text-muted-foreground text-xs">(optional)</span></FormLabel>
                         <FormControl>
-                          <Input placeholder="e.g. Mumbai, Delhi" {...field} />
+                          <Input
+                            placeholder="e.g. Mumbai, Delhi"
+                            autoComplete="address-level2"
+                            disabled={registerMutation.isPending}
+                            {...field}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
